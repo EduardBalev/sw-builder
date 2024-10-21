@@ -20,4 +20,7 @@ const CONFIG: SWConfig = {
 
 initServiceWorker(CONFIG);
 
+/**
+ * Adds an event listener to handle fetch events in the service worker.
+ */
 swScope.addEventListener("fetch", handleFetchEvent);

@@ -1,12 +1,12 @@
 import { clearAllAPICache, clearAllStaticCache } from "./cache";
-import { enableLogger, logger } from "./logger";
 import { STATE } from "./consts";
-import { sendEvent } from "./utils";
-import { swScope } from "./swScope";
-import { addStaticPatterns } from "./fetchHandlers";
 import { SWConfig } from "./interfaces/config";
 import { PageLoadedEventData } from "./interfaces/event-data";
 import { NotifyAllEventData } from "./interfaces/notify-data";
+import { enableLogger, logger } from "./logger";
+import { swScope } from "./swScope";
+import { sendEvent } from "./utils";
+
 /**
  * Initializes the service worker with the provided configuration and sets up event listeners.
  *
@@ -84,7 +84,9 @@ function handlePageLoaded(data: PageLoadedEventData, config: SWConfig) {
 
   if (staticPatterns && !config.DISABLE_STATIC_CACHE) {
     logger(`Caching static resources by patterns: ${staticPatterns}`);
-    addStaticPatterns(staticPatterns);
+    STATE.STATIC_RESOURCE_PATTERN = new RegExp(
+      staticPatterns.map((regex) => regex.source).join("|"),
+    );
   }
 
   if (config.DISABLE_STATIC_CACHE) {

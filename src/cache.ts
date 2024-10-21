@@ -2,6 +2,8 @@ import { STATE } from "./consts";
 import { logger } from "./logger";
 import { fetchAndCache, updateEndpoints } from "./utils";
 
+// TODO: Make better splitting to strategies.
+
 export async function handleStaticCache(request: Request) {
   const cache = await caches.open(STATE.CONFIG.CACHE_NAME_STATIC);
   const cachedResponse = await cache.match(request);

@@ -1,10 +1,13 @@
-import { SwCacheList, SwCahce } from "./interfaces/cache";
-import { SWConfig } from "./interfaces/config";
+import { SwCache } from "./interfaces/cache";
+import { SwState } from "./interfaces/state";
 
-export const STATE: {
-  CONFIG: SWConfig;
-  CACHE_LIST: SwCacheList;
-} = {
+/**
+ * The state object of the service worker, holding the configuration, static resource patterns, and cache entries.
+ *
+ * @constant {SwState} STATE
+ */
+export const STATE: SwState = {
   CONFIG: null,
-  CACHE_LIST: new Map<string, SwCahce>(),
+  STATIC_RESOURCE_PATTERN: new RegExp(""),
+  CACHE_LIST: new Map<string, SwCache>(),
 };
