@@ -1,0 +1,14 @@
+{
+  "name": "sw-builder",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "esbuild ./src/service-worker.ts --bundle --outfile=dist/bundle.js --platform=node --format=cjs --sourcemap"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  }
+}
