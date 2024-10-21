@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "esbuild ./src/service-worker.ts --bundle --outfile=dist/bundle.js --platform=node --format=cjs --sourcemap"
+    "build": "esbuild ./src/service-worker.ts --bundle --outfile=dist/service-worker.js --platform=node --format=cjs --sourcemap"
   },
   "author": "",
   "license": "ISC",
