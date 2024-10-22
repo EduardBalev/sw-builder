@@ -1,10 +1,3 @@
-// src/consts.ts
-var STATE = {
-  CONFIG: null,
-  STATIC_RESOURCE_PATTERN: new RegExp(""),
-  CACHE_LIST: /* @__PURE__ */ new Map()
-};
-
 // src/logger.ts
 var __loggerIsEnabled = false;
 function enableLogger() {
@@ -125,131 +118,179 @@ async function fetchAndCache(request, cache, config) {
     throw error;
   }
 }
+function matchesPattern(url, patterns) {
+  return patterns.some((pattern) => {
+    if (typeof pattern === "string") {
+      return url.includes(pattern);
+    } else {
+      return pattern.test(url);
+    }
+  });
+}
 function toCapitalizedString(input) {
   return input.charAt(0).toUpperCase() + input.slice(1).toLowerCase();
 }
 
-// src/cache.ts
-async function handleStaticCache(request) {
-  const cache = await caches.open(STATE.CONFIG.CACHE_NAME_STATIC);
-  const cachedResponse = await cache.match(request);
-  if (cachedResponse) {
-    logger("STATIC Cache hit:", request.url);
-    return cachedResponse;
+// src/cache-strategies/api-cache.strategy.ts
+var APICacheStrategy = class {
+  cacheName;
+  cacheList;
+  config;
+  /**
+   * Constructs the APICacheStrategy class.
+   *
+   * @param {string} cacheName - The name of the cache used for API requests.
+   * @param {SwCacheList} cacheList - A map of cache metadata used to manage API cache entries.
+   * @param {SWConfig} config - The service worker configuration.
+   */
+  constructor(cacheName, cacheList, config) {
+    this.cacheName = cacheName;
+    this.cacheList = cacheList;
+    this.config = config;
   }
-  logger("STATIC Cache miss - fetching from network:", request.url);
-  const networkResponse = await fetch(request);
-  cache.put(request, networkResponse.clone());
-  return networkResponse;
-}
-async function handleAPICache(request, cacheName) {
-  const cache = await caches.open(STATE.CONFIG.CACHE_NAME_API);
-  const cachedResponse = await cache.match(request);
-  const meta = STATE.CACHE_LIST.get(cacheName);
-  const now = (/* @__PURE__ */ new Date()).getTime();
-  const updateTimestamp = meta?.updateTimestamp ?? now;
-  const isManuallyUpdated = updateTimestamp < now;
-  if (cachedResponse && !isManuallyUpdated && !isCacheExpired(cachedResponse)) {
-    logger("API Cache hit:", request.url);
-    return cachedResponse;
-  }
-  if (cachedResponse) {
-    cache.delete(request);
-    meta.updateTimestamp = null;
-  }
-  logger("API Cache miss - fetching from network:", request.url);
-  const networkResponse = await fetchAndCache(
-    request,
-    STATE.CACHE_LIST,
-    STATE.CONFIG
-  );
-  cache.put(request, networkResponse.clone());
-  return networkResponse;
-}
-async function clearAllAPICache() {
-  await caches.delete(STATE.CONFIG.CACHE_NAME_API);
-  await updateEndpoints(
-    Array.from(STATE.CACHE_LIST.keys()),
-    STATE.CACHE_LIST,
-    STATE.CONFIG
-  );
-  logger("Updating all endpoints");
-}
-async function clearAllStaticCache() {
-  await caches.delete(STATE.CONFIG.CACHE_NAME_STATIC);
-  logger("Cleared static cache");
-}
-function isCacheExpired(cachedResponse) {
-  const cachedMetadata = getCachedMetadata(cachedResponse);
-  const currentTime = (/* @__PURE__ */ new Date()).getTime();
-  const expiredTime = cachedMetadata?.expired || 0;
-  return expiredTime < currentTime;
-}
-function getCachedMetadata(cachedResponse) {
-  const metadataString = cachedResponse.headers.get("X-Cache-Metadata");
-  return metadataString ? JSON.parse(metadataString) : null;
-}
-
-// src/eventListeners.ts
-function initServiceWorker(config) {
-  STATE.CONFIG = config;
-  if (config.debug) {
-    enableLogger();
-  }
-  setupInstallListener();
-  setupActivateListener();
-  setupMessageListener(config);
-}
-function setupInstallListener() {
-  swScope.addEventListener("install", () => {
-    swScope.skipWaiting();
-    logger("Service worker installed and skipped waiting.");
-  });
-}
-function setupActivateListener() {
-  swScope.addEventListener("activate", (event) => {
-    event.waitUntil(Promise.all([swScope.clients.claim(), clearAllAPICache()]));
-    logger("Activated service worker and claimed clients.");
-  });
-}
-function setupMessageListener(config) {
-  swScope.addEventListener(
-    "message",
-    (event) => {
-      const action = event.data.action;
-      logger("Received message action:", action);
-      switch (action) {
-        case "pageLoaded":
-          handlePageLoaded(event.data, config);
-          break;
-        case "notifyAll":
-          sendEvent(event.data.event);
-          break;
-        default:
-          logger("Unhandled message action:", action);
+  /**
+   * Handles an API request by either serving from the cache or fetching from the network.
+   *
+   * @param {Request} request - The API request to be handled.
+   * @returns {Promise<Response>} - The cached response or the network response.
+   */
+  async handle(request) {
+    const cache = await caches.open(this.config.CACHE_NAME_API);
+    const cachedResponse = await cache.match(request);
+    const meta = this.cacheList.get(this.cacheName);
+    const now = Date.now();
+    const updateTimestamp = meta?.updateTimestamp ?? now;
+    const isManuallyUpdated = updateTimestamp < now;
+    logger(`Handling API request for: ${request.url}`);
+    if (cachedResponse && !isManuallyUpdated && !this.isCacheExpired(cachedResponse)) {
+      logger(`API Cache hit: ${request.url}`);
+      return cachedResponse;
+    }
+    if (cachedResponse) {
+      logger(`API Cache outdated - deleting cached entry: ${request.url}`);
+      await cache.delete(request);
+      if (meta) {
+        meta.updateTimestamp = null;
       }
     }
-  );
-}
-function handlePageLoaded(data, config) {
-  const staticPatterns = data.staticPatterns;
-  config.DISABLE_STATIC_CACHE = !!data.disableStaticCache;
-  config.DISABLE_DYNAMIC_CACHE = !!data.disableDynamicCache;
-  config.APP_VERSION = data.version;
-  if (staticPatterns && !config.DISABLE_STATIC_CACHE) {
-    logger(`Caching static resources by patterns: ${staticPatterns}`);
-    STATE.STATIC_RESOURCE_PATTERN = new RegExp(
-      staticPatterns.map((regex) => regex.source).join("|")
+    logger(`API Cache miss - fetching from network: ${request.url}`);
+    const networkResponse = await fetchAndCache(
+      request,
+      this.cacheList,
+      this.config
     );
+    cache.put(request, networkResponse.clone());
+    return networkResponse;
   }
-  if (config.DISABLE_STATIC_CACHE) {
-    clearAllStaticCache();
+  /**
+   * Clears the API cache and updates all cached endpoints.
+   *
+   * This method deletes the current API cache and forces updates for all
+   * endpoints stored in the cache list.
+   */
+  async clear() {
+    logger("Clearing API cache...");
+    await caches.delete(this.config.CACHE_NAME_API);
+    await updateEndpoints(
+      Array.from(this.cacheList.keys()),
+      this.cacheList,
+      this.config
+    );
+    logger("API cache cleared and endpoints updated.");
   }
-  clearAllAPICache();
-}
+  /**
+   * Checks if the cached response has expired.
+   *
+   * @param {Response} cachedResponse - The cached response to check.
+   * @returns {boolean} - True if the cache has expired, false otherwise.
+   */
+  isCacheExpired(cachedResponse) {
+    const cachedMetadata = this.getCachedMetadata(cachedResponse);
+    const currentTime = Date.now();
+    const expiredTime = cachedMetadata?.expired || 0;
+    const isExpired = expiredTime < currentTime;
+    logger(
+      `Cache expiration check for ${cachedResponse.url}: ${isExpired ? "Expired" : "Valid"}`
+    );
+    return isExpired;
+  }
+  /**
+   * Extracts cache metadata from the cached response headers.
+   *
+   * @param {Response} cachedResponse - The cached response to extract metadata from.
+   * @returns {any} - The parsed metadata or null if no metadata is available.
+   */
+  getCachedMetadata(cachedResponse) {
+    const metadataString = cachedResponse.headers.get("X-Cache-Metadata");
+    logger(`Extracting cache metadata for ${cachedResponse.url}`);
+    return metadataString ? JSON.parse(metadataString) : null;
+  }
+};
+
+// src/cache-strategies/static-cache.strategy.ts
+var StaticCacheStrategy = class {
+  cacheName;
+  /**
+   * Constructs the StaticCacheStrategy class.
+   *
+   * @param {string} cacheName - The name of the cache used for static resources.
+   */
+  constructor(cacheName) {
+    this.cacheName = cacheName;
+  }
+  /**
+   * Handles a static resource request by either serving from the cache or fetching from the network.
+   *
+   * @param {Request} request - The static resource request to be handled.
+   * @returns {Promise<Response>} - The cached response or the network response.
+   */
+  async handle(request) {
+    const cache = await caches.open(this.cacheName);
+    const cachedResponse = await cache.match(request);
+    logger(`Handling static resource request for: ${request.url}`);
+    if (cachedResponse) {
+      logger(`STATIC Cache hit: ${request.url}`);
+      return cachedResponse;
+    }
+    logger(`STATIC Cache miss - fetching from network: ${request.url}`);
+    const networkResponse = await fetch(request);
+    cache.put(request, networkResponse.clone());
+    logger(`Cached static resource: ${request.url}`);
+    return networkResponse;
+  }
+  /**
+   * Clears the static resource cache.
+   *
+   * This method deletes the entire static resource cache associated with the cache name.
+   */
+  async clear() {
+    logger(`Clearing static cache: ${this.cacheName}`);
+    await caches.delete(this.cacheName);
+    logger(`Static cache cleared: ${this.cacheName}`);
+  }
+};
+
+// src/consts.ts
+var STATE = {
+  CONFIG: null,
+  STRATEGIES: {
+    apiCache: null,
+    staticCache: null
+  },
+  CACHE_LIST: /* @__PURE__ */ new Map()
+};
 
 // src/fetchHandlers.ts
-function handleFetchEvent(event) {
+function initFetchHandlers(strategies) {
+  logger("Initializing caching strategies...");
+  logger("Caching strategies initialized successfully.");
+  swScope.addEventListener("fetch", (event) => {
+    logger(`Fetch event detected for: ${event.request.url}`);
+    handleFetchEvent(event, strategies.apiCache, strategies.staticCache);
+  });
+  logger("Fetch event listener attached.");
+}
+function handleFetchEvent(event, apiCacheStrategy, staticCacheStrategy) {
   const requestUrl = new URL(event.request.url);
   const ignore = getRequestHeader(
     event.request,
@@ -261,32 +302,99 @@ function handleFetchEvent(event) {
   );
   logger(`Handling fetch event for: ${event.request.url}`);
   if (ignore) {
-    logger(`Request ignored: ${event.request.url}`);
+    logger(
+      `Request ignored due to CACHE_IGNORE_NAME header: ${event.request.url}`
+    );
     return;
   }
-  const isHtmlRequest = event.request.headers.get("Accept")?.includes("text/html") || requestUrl.pathname.endsWith(".html");
-  if (isHtmlRequest || /^chrome-extension:|^ws:|\/runtime\./.test(event.request.url)) {
-    logger(`Excluded request: ${event.request.url}`);
+  if (matchesPattern(requestUrl.href, STATE.CONFIG.EXCLUDE_PATTERNS)) {
+    logger(`Request excluded: ${event.request.url}`);
     return;
   }
-  if (requestUrl.pathname.includes("/api/") && !STATE.CONFIG.DISABLE_DYNAMIC_CACHE) {
+  if (matchesPattern(requestUrl.pathname, STATE.CONFIG.API_PATTERNS) && !STATE.CONFIG.DISABLE_DYNAMIC_CACHE) {
     logger(`Processing API request: ${event.request.url}`);
     catchCashableRequests(event.request, STATE.CACHE_LIST, STATE.CONFIG).then(
       () => {
         if (STATE.CACHE_LIST.has(cacheName)) {
           logger(`Serving API response from cache: ${cacheName}`);
-          event.respondWith(handleAPICache(event.request, cacheName));
+          event.respondWith(apiCacheStrategy.handle(event.request));
         }
       }
     );
     return;
   }
-  if (STATE.STATIC_RESOURCE_PATTERN.test(event.request.url) && event.request.method === "GET" && !STATE.CONFIG.DISABLE_STATIC_CACHE) {
+  if (matchesPattern(requestUrl.href, STATE.CONFIG.STATIC_RESOURCE_PATTERN) && event.request.method === "GET" && !STATE.CONFIG.DISABLE_STATIC_CACHE) {
     logger(`Serving static resource from cache: ${event.request.url}`);
-    event.respondWith(handleStaticCache(event.request));
+    event.respondWith(staticCacheStrategy.handle(event.request));
     return;
   }
   logger(`No cache strategy applied for request: ${event.request.url}`);
+}
+
+// src/eventListeners.ts
+function initServiceWorker(config) {
+  STATE.CONFIG = config;
+  STATE.CONFIG.EXCLUDE_PATTERNS = [
+    ...STATE.CONFIG.EXCLUDE_PATTERNS ?? [],
+    /^chrome-extension:/,
+    /^ws:/,
+    /\/runtime\./
+  ];
+  STATE.STRATEGIES.apiCache = new APICacheStrategy(
+    STATE.CONFIG.CACHE_NAME_API,
+    STATE.CACHE_LIST,
+    STATE.CONFIG
+  );
+  STATE.STRATEGIES.staticCache = new StaticCacheStrategy(
+    STATE.CONFIG.CACHE_NAME_STATIC
+  );
+  if (config.debug) {
+    enableLogger();
+  }
+  initFetchHandlers(STATE.STRATEGIES);
+  setupInstallListener();
+  setupActivateListener(STATE);
+  setupMessageListener(STATE);
+}
+function setupInstallListener() {
+  swScope.addEventListener("install", () => {
+    swScope.skipWaiting();
+    logger("Service worker installed and skipped waiting.");
+  });
+}
+function setupActivateListener(state) {
+  swScope.addEventListener("activate", (event) => {
+    event.waitUntil(
+      Promise.all([swScope.clients.claim(), state.STRATEGIES.apiCache.clear()])
+    );
+    logger("Activated service worker and claimed clients.");
+  });
+}
+function setupMessageListener(state) {
+  swScope.addEventListener(
+    "message",
+    (event) => {
+      const action = event.data.action;
+      logger("Received message action:", action);
+      switch (action) {
+        case "pageLoaded":
+          handlePageLoaded(event.data, state);
+          break;
+        case "notifyAll":
+          sendEvent(event.data.event);
+          break;
+        default:
+          logger("Unhandled message action:", action);
+      }
+    }
+  );
+}
+function handlePageLoaded(data, state) {
+  state.CONFIG.APP_VERSION = data.version;
+  if (state.CONFIG.DISABLE_STATIC_CACHE) {
+    state.STRATEGIES.staticCache.clear();
+  }
+  state.STRATEGIES.apiCache.clear();
 }
 
 // src/service-worker.ts
@@ -301,8 +409,15 @@ var CONFIG = {
   CACHE_TTL_NAME: "Sw-Cache-Ttl",
   CACHE_DELETE_NAME: "Sw-Cache-Update-For",
   DISABLE_STATIC_CACHE: false,
-  DISABLE_DYNAMIC_CACHE: false
+  DISABLE_DYNAMIC_CACHE: false,
+  STATIC_RESOURCE_PATTERN: [
+    /\.js$/,
+    /\.css$/,
+    /\/assets\//,
+    /\/translations\//
+  ],
+  EXCLUDE_PATTERNS: [/^chrome-extension:/, /^ws:/, /\/runtime\./],
+  API_PATTERNS: [/\/api\//]
 };
 initServiceWorker(CONFIG);
-swScope.addEventListener("fetch", handleFetchEvent);
 //# sourceMappingURL=service-worker.js.map

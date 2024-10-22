@@ -1,8 +1,11 @@
-import { clearAllAPICache, clearAllStaticCache } from "./cache";
+import { APICacheStrategy } from "./cache-strategies/api-cache.strategy";
+import { StaticCacheStrategy } from "./cache-strategies/static-cache.strategy";
 import { STATE } from "./consts";
+import { initFetchHandlers } from "./fetchHandlers";
 import { SWConfig } from "./interfaces/config";
 import { PageLoadedEventData } from "./interfaces/event-data";
 import { NotifyAllEventData } from "./interfaces/notify-data";
+import { SwState } from "./interfaces/state";
 import { enableLogger, logger } from "./logger";
 import { swScope } from "./swScope";
 import { sendEvent } from "./utils";
@@ -15,13 +18,32 @@ import { sendEvent } from "./utils";
 export function initServiceWorker(config: SWConfig) {
   STATE.CONFIG = config;
 
+  // Set defaults
+  STATE.CONFIG.EXCLUDE_PATTERNS = [
+    ...(STATE.CONFIG.EXCLUDE_PATTERNS ?? []),
+    /^chrome-extension:/,
+    /^ws:/,
+    /\/runtime\./,
+  ];
+
+  // Initialize caching strategies
+  STATE.STRATEGIES.apiCache = new APICacheStrategy(
+    STATE.CONFIG.CACHE_NAME_API,
+    STATE.CACHE_LIST,
+    STATE.CONFIG,
+  );
+  STATE.STRATEGIES.staticCache = new StaticCacheStrategy(
+    STATE.CONFIG.CACHE_NAME_STATIC,
+  );
+
   if (config.debug) {
     enableLogger();
   }
 
+  initFetchHandlers(STATE.STRATEGIES);
   setupInstallListener();
-  setupActivateListener();
-  setupMessageListener(config); // Passing config to message listener directly
+  setupActivateListener(STATE);
+  setupMessageListener(STATE); // Passing config to message listener directly
 }
 
 /**
@@ -37,9 +59,11 @@ function setupInstallListener() {
 /**
  * Sets up the activate event listener to claim clients and clear the API cache.
  */
-function setupActivateListener() {
+function setupActivateListener(state: SwState) {
   swScope.addEventListener("activate", (event) => {
-    event.waitUntil(Promise.all([swScope.clients.claim(), clearAllAPICache()]));
+    event.waitUntil(
+      Promise.all([swScope.clients.claim(), state.STRATEGIES.apiCache.clear()]),
+    );
     logger("Activated service worker and claimed clients.");
   });
 }
@@ -47,9 +71,9 @@ function setupActivateListener() {
 /**
  * Sets up the message event listener to handle specific actions like page load and notifications.
  *
- * @param {SWConfig} config - The service worker configuration.
+ * @param {SwState} state - The service worker state.
  */
-function setupMessageListener(config: SWConfig) {
+function setupMessageListener(state: SwState) {
   swScope.addEventListener(
     "message",
     (event: { data: PageLoadedEventData | NotifyAllEventData }) => {
@@ -58,7 +82,7 @@ function setupMessageListener(config: SWConfig) {
 
       switch (action) {
         case "pageLoaded":
-          handlePageLoaded(event.data as PageLoadedEventData, config);
+          handlePageLoaded(event.data as PageLoadedEventData, state);
           break;
         case "notifyAll":
           sendEvent((event.data as NotifyAllEventData).event);
@@ -74,24 +98,14 @@ function setupMessageListener(config: SWConfig) {
  * Handles the "pageLoaded" action, updates the service worker configuration, and caches static resources.
  *
  * @param {PageLoadedEventData} data - The data associated with the page load event.
- * @param {SWConfig} config - The service worker configuration.
+ * @param {SwState} state - The service worker state.
  */
-function handlePageLoaded(data: PageLoadedEventData, config: SWConfig) {
-  const staticPatterns = data.staticPatterns;
-  config.DISABLE_STATIC_CACHE = !!data.disableStaticCache;
-  config.DISABLE_DYNAMIC_CACHE = !!data.disableDynamicCache;
-  config.APP_VERSION = data.version;
+function handlePageLoaded(data: PageLoadedEventData, state: SwState) {
+  state.CONFIG.APP_VERSION = data.version;
 
-  if (staticPatterns && !config.DISABLE_STATIC_CACHE) {
-    logger(`Caching static resources by patterns: ${staticPatterns}`);
-    STATE.STATIC_RESOURCE_PATTERN = new RegExp(
-      staticPatterns.map((regex) => regex.source).join("|"),
-    );
+  if (state.CONFIG.DISABLE_STATIC_CACHE) {
+    state.STRATEGIES.staticCache.clear();
   }
 
-  if (config.DISABLE_STATIC_CACHE) {
-    clearAllStaticCache();
-  }
-
-  clearAllAPICache();
+  state.STRATEGIES.apiCache.clear();
 }

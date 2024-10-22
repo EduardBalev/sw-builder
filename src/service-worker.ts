@@ -1,7 +1,5 @@
 import { initServiceWorker } from "./eventListeners";
-import { handleFetchEvent } from "./fetchHandlers";
 import { SWConfig } from "./interfaces/config";
-import { swScope } from "./swScope";
 
 // TODO: add some configuration for define consts and setup SW
 const CONFIG: SWConfig = {
@@ -16,11 +14,14 @@ const CONFIG: SWConfig = {
   CACHE_DELETE_NAME: "Sw-Cache-Update-For",
   DISABLE_STATIC_CACHE: false,
   DISABLE_DYNAMIC_CACHE: false,
+  STATIC_RESOURCE_PATTERN: [
+    /\.js$/,
+    /\.css$/,
+    /\/assets\//,
+    /\/translations\//,
+  ],
+  EXCLUDE_PATTERNS: [/^chrome-extension:/, /^ws:/, /\/runtime\./],
+  API_PATTERNS: [/\/api\//],
 };
 
 initServiceWorker(CONFIG);
-
-/**
- * Adds an event listener to handle fetch events in the service worker.
- */
-swScope.addEventListener("fetch", handleFetchEvent);

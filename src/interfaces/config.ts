@@ -39,4 +39,20 @@ export interface SWConfig {
 
   /** Flag to disable dynamic caching, typically for API requests. */
   DISABLE_DYNAMIC_CACHE: boolean;
+
+  /** Patterns (string or RegExp) used to match static resources for caching. */
+  STATIC_RESOURCE_PATTERN: (string | RegExp)[];
+
+  /**
+   * Patterns (string or RegExp) to exclude certain URLs from caching.
+   * Commonly used for Chrome extensions, WebSocket connections, etc.
+   *
+   * @default [/^chrome-extension:/, /^ws:/, /\/runtime\./]
+   */
+  EXCLUDE_PATTERNS: (string | RegExp)[];
+
+  /**
+   * Patterns (string or RegExp) to identify API request URLs for dynamic caching.
+   */
+  API_PATTERNS: (string | RegExp)[];
 }

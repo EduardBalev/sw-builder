@@ -8,6 +8,9 @@ import { SwState } from "./interfaces/state";
  */
 export const STATE: SwState = {
   CONFIG: null,
-  STATIC_RESOURCE_PATTERN: new RegExp(""),
+  STRATEGIES: {
+    apiCache: null,
+    staticCache: null,
+  },
   CACHE_LIST: new Map<string, SwCache>(),
 };

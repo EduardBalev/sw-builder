@@ -24,3 +24,11 @@ export interface SwCache {
  * TTL and update timestamp.
  */
 export type SwCacheList = Map<string, SwCache>;
+
+/**
+ * Common interface for cache strategies.
+ */
+export interface CacheStrategy {
+  handle(request: Request): Promise<Response>;
+  clear(): Promise<void>;
+}
