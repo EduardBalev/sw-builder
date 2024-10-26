@@ -1,5 +1,5 @@
 import { SWConfig } from "../interfaces/config";
-import { fnRollup } from "../utils/function-rullup";
+import { fnRollup } from "../utils/function";
 
 export function notificationClickHandler(
   event: NotificationEvent,

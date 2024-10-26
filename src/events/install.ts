@@ -1,6 +1,9 @@
-import { SWConfig } from "../interfaces/config";
-import { fnRollup } from "../utils/function-rullup";
+import { HandlerFn } from "../interfaces/events";
+import { fnRollup } from "../utils/function";
 
-export function installHandler(event: ExtendableEvent, config: SWConfig) {
-  fnRollup(config.events.install, event);
+export function registerHandlers(
+  event: ExtendableEvent,
+  handlers: HandlerFn | HandlerFn[] | string | string[],
+) {
+  fnRollup(handlers, event);
 }

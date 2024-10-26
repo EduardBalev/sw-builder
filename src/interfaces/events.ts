@@ -1,4 +1,4 @@
-type HandlerFn<T extends Event = ExtendableEvent> = (event: T) => void;
+export type HandlerFn<T extends Event = ExtendableEvent> = (event: T) => void;
 
 export type InstallHandler = HandlerFn;
 export type ActivateHandler = HandlerFn;
