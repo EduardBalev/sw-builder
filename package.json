@@ -1,10 +1,13 @@
 {
   "name": "sw-builder",
   "version": "1.0.0",
-  "description": "",
+  "description": "A CLI tool to build service workers based on user configuration",
   "main": "index.js",
+  "bin": {
+    "sw-builder": "./cli.js"
+  },
   "scripts": {
-    "build": "esbuild ./src/service-worker.ts --bundle --outfile=dist/service-worker.js --platform=node --format=cjs --sourcemap"
+    "build": "node cli.js --config=sw-config.json"
   },
   "author": "",
   "license": "ISC",

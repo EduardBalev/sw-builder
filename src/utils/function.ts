@@ -6,9 +6,9 @@ export function fnRollup(
     fn(...args);
   }
 
-  if (typeof fn === "string") {
-    parseFunctions(fn)(...args);
-  }
+  // if (typeof fn === "string") {
+  //   parseFunctions(fn)(...args);
+  // }
 
   if (Array.isArray(fn)) {
     for (const f of fn) {
