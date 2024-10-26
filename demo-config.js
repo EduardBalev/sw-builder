@@ -1,5 +1,8 @@
 module.exports = {
   target: "dist/service-worker.js",
+  minify: false,
+  sourcemap: false,
+  debug: true,
   events: {
     install: [(event) => console.log("Custom install function")],
     fetch: [

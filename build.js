@@ -13,7 +13,10 @@ function buildServiceWorker(config) {
 
   // Generate a temporary injected config file with real functions
   const injectedConfigPath = path.resolve(__dirname, "injectedConfig.js");
-  const configContent =
+  let configContent = `export const CONFIG = ${JSON.stringify({
+    debug: config.debug,
+  })};`;
+  configContent +=
     `export const EVENTS = ${JSON.stringify(config.events, functionReplacer("+fff+"))};`
       .replace(
         /"\+fff\+(\(.*?\)\s*=>\s*{?.*?}?|function\s*\(.*?\)\s*{?.*?})\+fff\+"/g,
@@ -29,10 +32,14 @@ function buildServiceWorker(config) {
     .build({
       entryPoints: [entryPoint],
       bundle: true,
+      minify: !!config.minify, // Enable minification for smaller file size
+      sourcemap: !!config.sourcemap, // Enable source map generation
       outfile: config.target ?? "service-worker.js",
-      // define: {
-      //   CONFIG: JSON.stringify(config),
-      // },
+      define: {
+        CONFIG: JSON.stringify({
+          debug: config.debug,
+        }),
+      },
       inject: [injectedConfigPath],
       target: ["chrome58", "firefox57"], // Set target environments if needed
       format: "esm", // Use ESM format for compatibility
