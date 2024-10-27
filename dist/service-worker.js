@@ -1,5 +1,5 @@
-// injectedConfig.js
-var EVENTS = { "install": [(event) => console.log("Custom install function")], "fetch": [(event) => {
+// __injectedConfig.js
+var EVENTS = { install: [(event) => console.log("Custom install function")], fetch: [(event) => {
   console.log("Custom fetch handling");
   event.respondWith(fetch(event.request));
 }] };
