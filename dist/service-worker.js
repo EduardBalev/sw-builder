@@ -1,7 +1,7 @@
-// __injectedConfig.js
+// cli/__injectedConfig.js
 var CONFIG = { "debug": true };
 var EVENTS = { install: [(event) => console.log("Custom install function")], fetch: [(event) => {
-  console.log("Custom fetch handling");
+  console.log("Custom fetch handling from .ts");
   event.respondWith(fetch(event.request));
 }] };
 

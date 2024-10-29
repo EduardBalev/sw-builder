@@ -11,7 +11,10 @@
   },
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "esbuild": "^0.24.0"
+  "devDependencies": {
+    "@simple_js/log-styler": "^1.0.1",
+    "esbuild": "^0.24.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3"
   }
 }

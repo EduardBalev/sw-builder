@@ -8,8 +8,7 @@ const fs = require("fs");
  *
  * @param {object} config - The configuration object loaded from the user's file.
  */
-async function buildServiceWorker(config) {
-  const entryPoint = path.resolve(__dirname, "src/index.ts"); // Main entry point for the service worker
+async function buildServiceWorker(config, entryPoint) {
   const injectedConfigPath = path.resolve(__dirname, "__injectedConfig.js"); // Path for temporary injected config
 
   try {
@@ -26,9 +25,6 @@ async function buildServiceWorker(config) {
       target: ["chrome58", "firefox57"], // Set target environments if needed
       format: "esm", // Use ESM format for compatibility
     });
-    console.log("Service worker built successfully.");
-  } catch (error) {
-    console.error("Error building service worker:", error);
   } finally {
     // Clean up the temporary config file
     cleanupInjectedConfigFile(injectedConfigPath);
