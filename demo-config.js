@@ -1,5 +1,5 @@
 module.exports = {
-  target: "dist/service-worker.js",
+  target: "example/service-worker.js",
   minify: false,
   sourcemap: false,
   debug: true,

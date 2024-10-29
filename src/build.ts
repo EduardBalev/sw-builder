@@ -1,6 +1,6 @@
-const esbuild = require("esbuild");
-const path = require("path");
-const fs = require("fs");
+import esbuild from "esbuild";
+import path from "path";
+import fs from "fs";
 
 /**
  * Builds the service worker using esbuild to bundle all necessary files
@@ -8,7 +8,10 @@ const fs = require("fs");
  *
  * @param {object} config - The configuration object loaded from the user's file.
  */
-async function buildServiceWorker(config, entryPoint) {
+export async function buildServiceWorker(
+  config: { [key: string]: any },
+  entryPoint: string,
+) {
   const injectedConfigPath = path.resolve(__dirname, "__injectedConfig.js"); // Path for temporary injected config
 
   try {
@@ -37,7 +40,10 @@ async function buildServiceWorker(config, entryPoint) {
  * @param {object} config - The configuration object.
  * @param {string} filePath - The path where the temporary config file should be created.
  */
-function createInjectedConfigFile(config, filePath) {
+function createInjectedConfigFile(
+  config: { [key: string]: any },
+  filePath: string,
+) {
   const configContent = generateConfigContent(config);
   fs.writeFileSync(filePath, configContent);
 }
@@ -48,9 +54,9 @@ function createInjectedConfigFile(config, filePath) {
  * @param {object} config - The configuration object.
  * @returns {string} - The generated config content.
  */
-function generateConfigContent(config) {
+function generateConfigContent(config: { [key: string]: any }): string {
   const configObjectString = JSON.stringify({ debug: config.debug });
-  const eventsString = JSON.stringify(config.events, customStringifyReplacer())
+  const eventsString = JSON.stringify(config.events, customStringifyReplacer)
     .replace(/\\"/g, '"')
     .replace(/\\n/g, "")
     .trim()
@@ -64,7 +70,7 @@ function generateConfigContent(config) {
  *
  * @param {string} filePath - The path to the temporary config file.
  */
-function cleanupInjectedConfigFile(filePath) {
+function cleanupInjectedConfigFile(filePath: string) {
   if (fs.existsSync(filePath)) {
     fs.unlinkSync(filePath);
   }
@@ -73,18 +79,14 @@ function cleanupInjectedConfigFile(filePath) {
 /**
  * Custom replacer function for JSON.stringify that converts functions
  * to their string representations and handles objects and arrays properly.
- *
- * @returns {Function} A custom replacer function for JSON.stringify.
  */
-function customStringifyReplacer() {
-  return function (key, value) {
-    if (value && typeof value === "object" && !Array.isArray(value)) {
-      // Convert the object to a string representation
-      return objectToString(value);
-    }
-    // Convert arrays and other types to strings
-    return arrayOrValueToString(value);
-  };
+function customStringifyReplacer(key: string, value: { [key: string]: any }) {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    // Convert the object to a string representation
+    return objectToString(value);
+  }
+  // Convert arrays and other types to strings
+  return arrayOrValueToString(value);
 }
 
 /**
@@ -94,7 +96,7 @@ function customStringifyReplacer() {
  * @param {Object} obj - The object to convert to a string.
  * @returns {string} A string representation of the object.
  */
-function objectToString(obj) {
+function objectToString(obj: { [key: string]: any }): string {
   const keys = Object.keys(obj);
   const str = keys
     .map((key) => `${key}: ${arrayOrValueToString(obj[key])}`)
@@ -110,7 +112,7 @@ function objectToString(obj) {
  * @param {any} value - The value to convert to a string.
  * @returns {string} A string representation of the array or value.
  */
-function arrayOrValueToString(value) {
+function arrayOrValueToString(value: any): string {
   if (Array.isArray(value)) {
     // Convert each array element to a string
     const str = value.map((item) => functionToString(item)).join(", ");
@@ -127,11 +129,9 @@ function arrayOrValueToString(value) {
  * @param {any} value - The value to convert to a string if it is a function.
  * @returns {string} The string representation of the function or the original value.
  */
-function functionToString(value) {
+function functionToString(value: any): string {
   if (typeof value === "function") {
     return value.toString();
   }
   return JSON.stringify(value); // Use JSON.stringify for other types
 }
-
-module.exports = { buildServiceWorker };

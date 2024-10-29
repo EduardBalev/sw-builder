@@ -1,11 +1,11 @@
-// cli/__injectedConfig.js
+// dist/__injectedConfig.js
 var CONFIG = { "debug": true };
 var EVENTS = { install: [(event) => console.log("Custom install function")], fetch: [(event) => {
   console.log("Custom fetch handling from .ts");
   event.respondWith(fetch(event.request));
 }] };
 
-// src/events/index.ts
+// builder/src/events/index.ts
 var DEFAULT_EVENTS = {
   install: null,
   // installHandler,
@@ -31,7 +31,7 @@ var DEFAULT_EVENTS = {
   // backgroundFetchAbortHandler,
 };
 
-// src/utils/function.ts
+// builder/src/utils/function.ts
 function fnRollup(fn, ...args) {
   if (typeof fn === "function") {
     fn(...args);
@@ -43,7 +43,7 @@ function fnRollup(fn, ...args) {
   }
 }
 
-// src/index.ts
+// builder/src/index.ts
 for (const eventName in DEFAULT_EVENTS) {
   if (DEFAULT_EVENTS[eventName] || EVENTS[eventName]) {
     self.addEventListener(eventName, (event) => {
