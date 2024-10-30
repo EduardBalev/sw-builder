@@ -1,17 +1,15 @@
 {
+  "extends": "../tsconfig",
   "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "target": "ES2020",
-    "module": "commonjs",
+    "rootDir": ".",
+    "target": "es2022",
+    "lib": ["ES2022", "DOM"],
     "moduleResolution": "node",
-    "declaration": true,
-    "sourceMap": false,
     "strict": false,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*.ts", "src/global.d.ts"],
   "exclude": ["node_modules", "dist"]
 }
