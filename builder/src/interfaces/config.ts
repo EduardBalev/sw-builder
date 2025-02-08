@@ -1,3 +1,4 @@
+import { CachePolicy } from "./cache-policies";
 import {
   InstallHandler,
   ActivateHandler,
@@ -15,6 +16,10 @@ import {
 export declare interface SWConfig {
   /** Flag to enable or disable debug mode in the service worker. */
   debug?: boolean;
+  cachePolicies: {
+    staticResources: CachePolicy;
+    apiResponses: CachePolicy;
+  };
 }
 
 export declare interface SWEvents {

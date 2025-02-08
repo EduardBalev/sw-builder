@@ -63,7 +63,7 @@ async function main() {
  * Parses command-line arguments to find the config file path.
  * @returns {string | null} - The config file path or null if not found.
  */
-function getConfigFilePath() {
+function getConfigFilePath(): string | null {
   const args = process.argv.slice(2);
   return args.find((arg) => arg.startsWith("--config="))?.split("=")[1] || null;
 }
@@ -73,7 +73,7 @@ function getConfigFilePath() {
  * @param {string} relativePath - The relative path to the entry point.
  * @returns {string} - The resolved absolute path to the entry point.
  */
-function resolveEntryPoint(relativePath) {
+function resolveEntryPoint(relativePath: string): string {
   return path.resolve(__dirname, relativePath);
 }
 
