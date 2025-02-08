@@ -1,9 +1,9 @@
 /// <reference lib="webworker" />
 
-import { SWConfig, SWEvents } from "./interfaces/config";
+import { SWConfig, SwHooks } from './interfaces/config';
 
 // Declare `CONFIG` as a global constant of type `SWConfig`
 declare const CONFIG: SWConfig;
 
-// Declare `EVENTS` as a global constant of type `SWEvents`
-declare const EVENTS: SWEvents;
+// Declare `HOOKS` as a global constant of type `SwHooks`
+declare const HOOKS: SwHooks;

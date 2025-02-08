@@ -1,17 +1,13 @@
 /// <reference lib="webworker" />
 
-export default {
+import { SwSetupConfig } from './src/config';
+
+const config: SwSetupConfig = {
   target: 'example/service-worker.js',
+  sourcePath: 'demo-source.ts',
   minify: false,
   sourcemap: false,
   debug: true,
-  events: {
-    install: [(event: any) => console.log('Custom install function')],
-    fetch: [
-      (event: FetchEvent) => {
-        console.log('Custom fetch handling from .ts');
-        event.respondWith(fetch(event.request));
-      },
-    ],
-  },
 };
+
+export default config;

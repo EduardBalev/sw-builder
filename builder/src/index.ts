@@ -1,20 +1,14 @@
-import { DEFAULT_EVENTS } from "./events";
-import { SWConfig, SWEvents } from "./interfaces/config";
-import { fnRollup } from "./utils/function";
+import { SwEventName } from './interfaces/events';
 
-declare const CONFIG: SWConfig;
-declare const EVENTS: SWEvents;
-
-for (const eventName in DEFAULT_EVENTS) {
-  if (DEFAULT_EVENTS[eventName] || EVENTS[eventName]) {
-    self.addEventListener(eventName, (event: ExtendableEvent) => {
-      if (DEFAULT_EVENTS[eventName]) {
-        DEFAULT_EVENTS[eventName](event, CONFIG);
-      }
-
-      if (EVENTS[eventName]) {
-        fnRollup(EVENTS[eventName], event);
-      }
-    });
+function registerEvent(eventName: SwEventName, fn: Function) {
+  if (typeof fn !== 'function') {
+    return;
   }
+
+  // TODO: Uncomment this
+  // self.addEventListener(eventName, (event: ExtendableEvent) => {
+  //   fn(event);
+  // });
+
+  fn({ event: eventName });
 }

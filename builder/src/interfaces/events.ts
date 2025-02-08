@@ -1,3 +1,16 @@
+export type SwEventName =
+  | 'install'
+  | 'activate'
+  | 'fetch'
+  | 'message'
+  | 'push'
+  | 'sync'
+  | 'notificationclick'
+  | 'notificationclose'
+  | 'backgroundfetchsuccess'
+  | 'backgroundfetchfail'
+  | 'backgroundfetchabort';
+
 export type HandlerFn<T extends Event = ExtendableEvent> = (event: T) => void;
 
 export type InstallHandler = HandlerFn;
@@ -8,8 +21,7 @@ export type SyncHandler = HandlerFn<SyncEvent>;
 export type NotificationClickHandler = HandlerFn<NotificationEvent>;
 export type NotificationCloseHandler = HandlerFn<NotificationEvent>;
 export type MessageHandler = HandlerFn<MessageEvent>;
-export type BackgroundFetchSuccessHandler =
-  HandlerFn<BackgroundFetchSuccessEvent>;
+export type BackgroundFetchSuccessHandler = HandlerFn<BackgroundFetchSuccessEvent>;
 export type BackgroundFetchFailHandler = HandlerFn<BackgroundFetchFailEvent>;
 export type BackgroundFetchAbortHandler = HandlerFn<BackgroundFetchAbortEvent>;
 
@@ -33,7 +45,7 @@ interface BackgroundFetchRegistration {
   readonly downloaded: number;
   readonly uploadTotal: number;
   readonly uploaded: number;
-  readonly result: "success" | "failure" | "abort";
+  readonly result: 'success' | 'failure' | 'abort';
 }
 
 export interface BackgroundFetchSuccessEvent extends ExtendableEvent {
@@ -58,4 +70,18 @@ export interface BackgroundFetchAbortEvent extends ExtendableEvent {
    * to metadata about the fetch that was aborted.
    */
   readonly registration: BackgroundFetchRegistration;
+}
+
+export interface SwHooks {
+  onInstall?: InstallHandler;
+  onActivate?: ActivateHandler;
+  onFetch?: FetchHandler;
+  onMessage?: MessageHandler;
+  onPush?: PushHandler;
+  onSync?: SyncHandler;
+  onNotificationClick?: NotificationClickHandler;
+  onNotificationClose?: NotificationCloseHandler;
+  onBackgroundFetchSuccess?: BackgroundFetchSuccessHandler;
+  onBackgroundFetchFail?: BackgroundFetchFailHandler;
+  onBackgroundFetchAbort?: BackgroundFetchAbortHandler;
 }
