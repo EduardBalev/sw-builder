@@ -16,7 +16,8 @@
     "node": ">=14.0.0"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
     "build": "tsc && chmod +x ./dist/index.js",
@@ -31,9 +32,17 @@
     "typescript",
     "builder",
     "pwa",
-    "web-worker"
+    "web-worker",
+    "service worker builder",
+    "typescript service worker",
+    "pwa builder",
+    "worker builder"
   ],
-  "author": "Eduard Balev (https://github.com/EduardBalev)",
+  "author": {
+    "name": "Eduard Balev",
+    "email": "baleveduard@gmail.com",
+    "url": "https://github.com/EduardBalev"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
