@@ -1,0 +1,10 @@
+src/
+demo/
+.git/
+.github/
+.vscode/
+node_modules/
+*.log
+tsconfig.json
+.gitignore
+.npmignore 

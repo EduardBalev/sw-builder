@@ -4,6 +4,7 @@ import path from 'path';
 import { mergeContents } from './content-merger';
 import { createEntryContent } from './entry';
 import { extractExports, removeExportKeywords } from './exports-handler';
+import { SwSetupConfig } from './interfaces/config';
 
 /**
  * Builds the service worker using esbuild to bundle all necessary files
@@ -11,18 +12,18 @@ import { extractExports, removeExportKeywords } from './exports-handler';
  *
  * @param {object} config - The configuration object loaded from the user's file.
  */
-export async function buildServiceWorker(config: { [key: string]: any }) {
+export async function buildServiceWorker(config: SwSetupConfig) {
   const sourceFilePath = path.resolve(process.cwd(), config.sourcePath);
 
   if (!fs.existsSync(sourceFilePath)) {
     throw new Error(`Source file not found: ${config.sourcePath}`);
   }
 
-  const tempFile = path.resolve(__dirname, '__temp_merged.ts');
+  const tempFile = path.resolve(__dirname, '.temp.service-worker.bundle.ts');
 
   try {
     // Read and process files
-    const entryContent = createEntryContent();
+    const entryContent = createEntryContent(config);
     const sourceContent = fs.readFileSync(sourceFilePath, 'utf-8');
 
     const exportedItems = extractExports(sourceContent);
@@ -62,13 +63,13 @@ export async function buildServiceWorker(config: { [key: string]: any }) {
       },
       absWorkingDir: process.cwd(),
       alias: {
-        'sw-builder': path.resolve(__dirname, './interfaces'),
+        'sw-builder': path.resolve(__dirname, 'interfaces/public-api.js'),
       },
     });
 
-    console.log(`Service worker built from ${config.sourcePath}`);
+    console.log(`Service worker built successfully: ${config.target}`);
   } catch (error) {
-    console.error('Error building service worker:', error);
+    console.error('Build failed:', error);
     process.exit(1);
   } finally {
     if (fs.existsSync(tempFile)) {
