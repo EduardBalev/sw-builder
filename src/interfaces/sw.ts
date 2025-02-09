@@ -1,21 +1,14 @@
 /// <reference lib="webworker" />
 
-import { SwEventName } from 'sw-builder';
+import { SwEventName } from './events';
 
-const debug = false;
-
+/**
+ * Type for the Service Worker global scope, excluding event handlers
+ * that will be managed through our hook system
+ */
 export type Sw = Omit<ServiceWorkerGlobalScope, `on${SwEventName}`>;
-export const SW: Sw =
-  globalThis.self ??
-  (debug
-    ? {
-        ...globalThis,
-        skipWaiting: () => {
-          console.log('skipWaiting');
-        },
-        addEventListener: (eventName, fn) => {
-          console.log('addEventListener', eventName, fn);
-          fn({ event: eventName });
-        },
-      }
-    : ({} as any));
+
+/**
+ * Service Worker global scope, safely handled for both runtime and build time
+ */
+export const SW: Sw = (typeof self !== 'undefined' ? self : {}) as Sw;

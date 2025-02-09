@@ -1,52 +1,187 @@
-# Caching Strategies for Service Workers
+# SW Builder
 
-This NPM package provides a flexible caching solution for service workers, supporting both API and static resource caching. It includes two main caching strategies, APICacheStrategy and StaticCacheStrategy, that allow for efficient caching of resources using customizable patterns and configurations.
+A powerful TypeScript library that simplifies service worker development by solving common challenges:
+
+- Eliminates runtime errors with fully type-safe event handlers and configuration
+- Removes boilerplate code and complex setup typically needed for service workers
+- Provides a streamlined development experience with watch mode and hot reloading
+- Handles the complexity of service worker registration and lifecycle management
+- Makes debugging easier with built-in debug mode and sourcemap support
+- Bundles and optimizes your service worker code automatically
 
 ## Features
 
-- __API and Static Caching Strategies__: Separate strategies for handling API requests and static resources, each with customizable caching behavior.
-- __Flexible Configuration__: Support for configuring cache patterns, exclusion rules, and cache strategies via an extensible `SWConfig`.
-- __Cache Management__: Includes functionality to handle cache expiration, update cache entries, and clear caches when necessary.
-- __Modular Design__: Both `APICacheStrategy` and `StaticCacheStrategy` are implemented as classes, providing clean, maintainable, and reusable code.
-- __Detailed Logging__: Logging integrated into the package for better debugging and monitoring of cache behavior.
+- 🛠 **Type-Safe Event Handlers**: Built-in TypeScript types for all service worker events
+- 🔄 **Watch Mode**: Automatic rebuilding when source files change
+- ⚙️ **Configurable**: Flexible configuration for build settings
+- 🐛 **Debug Support**: Built-in debug mode for easier development
+- 📦 **Zero Runtime Dependencies**: Only development dependencies needed
 
 ## Installation
 
-Install the package via NPM:
-
 ```bash
-npm install caching-strategies-service-worker
+npm install sw-builder --save-dev
 ```
 
-## Usage
+## Quick Start
 
---
+1. Create a configuration file (e.g., `sw-config.ts`):
 
-### Configuration Properties
+```typescript
+import { SwSetupConfig } from 'sw-builder';
 
-- `CACHE_NAME_API`: The name of the cache for API requests.
-- `CACHE_NAME_STATIC`: The name of the cache for static resources.
-- `CACHE_IGNORE_NAME`: The request header name used to determine if a request should be ignored.
-- `CACHE_HEADER_NAME`: The request header name used to specify a custom cache name.
-- `DISABLE_STATIC_CACHE`: Boolean flag to disable static caching.
-- `DISABLE_DYNAMIC_CACHE`: Boolean flag to disable dynamic (API) caching.
-- `STATIC_RESOURCE_PATTERN`: An array of patterns (string or RegExp) to match URLs of static resources for caching.
-- `EXCLUDE_PATTERNS`: An array of patterns (string or RegExp) to exclude specific URLs from caching.
-- `API_PATTERNS`: An array of patterns (string or RegExp) to identify API requests for dynamic caching.
+const config: SwSetupConfig = {
+  target: './public/service-worker.js',
+  sourcePath: './src/sw-handlers.ts',
+  minify: true,
+  sourcemap: false,
+  debug: false,
+};
 
+export default config;
+```
+
+2. Create your service worker handlers (e.g., `src/sw-handlers.ts`):
+
+```typescript
+import type { InstallHandler, ActivateHandler, FetchHandler } from 'sw-builder';
+import { SW } from 'sw-builder';
+
+export const onInstall: InstallHandler = (event) => {
+  console.log('Service Worker installing');
+  SW.skipWaiting();
+};
+
+export const onActivate: ActivateHandler = (event) => {
+  console.log('Service Worker activating');
+  event.waitUntil(SW.clients.claim());
+};
+
+export const onFetch: FetchHandler = (event) => {
+  console.log('Handling fetch event');
+};
+```
+
+3. Build your service worker:
+
+```bash
+sw-builder --config=sw-config.ts
+```
+
+Or with watch mode:
+
+```bash
+sw-builder --config=sw-config.ts --watch
+```
+
+## Configuration
+
+The `SwSetupConfig` interface supports the following options:
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `target` | `string` | Output path for the built service worker |
+| `sourcePath` | `string` | Path to your handlers source file |
+| `minify` | `boolean` | Whether to minify the output |
+| `sourcemap` | `boolean` | Whether to generate source maps |
+| `debug` | `boolean` | Enable debug mode for additional logging |
+
+## Supported Events
+
+SW Builder supports all standard service worker events with type-safe handlers:
+
+- `onInstall`: Called when the service worker is installing
+- `onActivate`: Called when the service worker is activating
+- `onFetch`: Called for fetch events
+- `onMessage`: Called for message events
+- `onPush`: Called for push notifications
+- `onSync`: Called for background sync
+- `onNotificationClick`: Called when notifications are clicked
+- `onNotificationClose`: Called when notifications are closed
+- `onBackgroundFetchSuccess`: Called on successful background fetch
+- `onBackgroundFetchFail`: Called on failed background fetch
+- `onBackgroundFetchAbort`: Called when background fetch is aborted
+
+## Debug Mode
+
+When debug mode is enabled (`debug: true` in config), the service worker will log:
+- Event registrations
+- Event triggers
+- Additional debugging information
+
+## Example Project Structure
+
+```
+your-project/
+├── src/
+│   └── sw-handlers.ts     # Your service worker handlers
+├── public/
+│   └── service-worker.js  # Built service worker
+├── sw-config.ts           # SW Builder configuration
+└── package.json
+```
+
+## API Reference
+
+### SW Object
+
+The `SW` object provides type-safe access to the ServiceWorkerGlobalScope:
+
+```typescript
+import { SW } from 'sw-builder';
+
+SW.skipWaiting();
+SW.clients.claim();
+// ... other ServiceWorkerGlobalScope methods
+```
+
+### Event Handlers
+
+Event handlers must be exported to be included in the final service worker:
+All event handlers are properly typed:
+
+```typescript
+import type { FetchHandler } from 'sw-builder';
+
+export const onFetch: FetchHandler = (event) => {
+  // event is properly typed as FetchEvent
+};
+```
+
+## Development
+
+The project includes several npm scripts for development:
+
+```bash
+# Development mode (uses source TypeScript files)
+npm run dev         # Runs the builder in watch mode using TypeScript source
+npm run serve       # Starts the demo server
+
+# Combined development
+npm run demo        # Runs both dev and serve in parallel
+
+# Production mode (uses built JavaScript files)
+npm run build       # Builds the library
+npm run start       # Runs the built version in watch mode
+```
+
+### Development vs Production Scripts
+
+- Development scripts (`dev`, `serve`, `demo`):
+  - Run directly from TypeScript source
+  - Better for development with source maps
+  - Faster feedback cycle
+  - Used when developing the library
+
+- Production scripts (`build`, `start`):
+  - Use the built JavaScript files
+  - Test the actual published package behavior
+  - Used to verify the built package works correctly
 
 ## License
 
-This project is licensed under the [MIT License](https://en.wikipedia.org/wiki/MIT_License) - see the LICENSE file for details.
+MIT
 
 ## Contributing
 
-Contributions are welcome! If you have suggestions for improvements or find bugs, please open an issue or submit a pull request.
-
-- Fork the repository.
-- Create your feature branch: `git checkout -b feature/AmazingFeature`
-- Commit your changes: `git commit -m 'Add some amazing feature'`
-- Push to the branch: `git push origin feature/AmazingFeature`
-- Open a pull request.
-
-Thank you for considering contributing to this project!
+Contributions are welcome! Please feel free to submit a Pull Request.

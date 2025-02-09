@@ -1,11 +1,11 @@
 import { SwSetupConfig } from 'sw-builder';
+import path from 'path';
 
 const config: SwSetupConfig = {
-  target: 'example/service-worker.js',
-  sourcePath: 'demo-source.ts',
+  target: path.resolve(__dirname, './service-worker.js'),
+  sourcePath: path.resolve(__dirname, './demo-source.ts'),
   minify: false,
-  sourcemap: false,
+  sourcemap: true,
   debug: true,
 };
-
 export default config;
