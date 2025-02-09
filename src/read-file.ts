@@ -1,5 +1,5 @@
 import path from 'path';
-import { SwSetupConfig } from './config';
+import { SwSetupConfig } from './interfaces';
 
 /**
  * Validates the configuration object

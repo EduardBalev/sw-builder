@@ -1,3 +1,5 @@
+/// <reference lib="webworker" />
+
 export type SwEventName =
   | 'install'
   | 'activate'
@@ -70,18 +72,4 @@ export interface BackgroundFetchAbortEvent extends ExtendableEvent {
    * to metadata about the fetch that was aborted.
    */
   readonly registration: BackgroundFetchRegistration;
-}
-
-export interface SwHooks {
-  onInstall?: InstallHandler;
-  onActivate?: ActivateHandler;
-  onFetch?: FetchHandler;
-  onMessage?: MessageHandler;
-  onPush?: PushHandler;
-  onSync?: SyncHandler;
-  onNotificationClick?: NotificationClickHandler;
-  onNotificationClose?: NotificationCloseHandler;
-  onBackgroundFetchSuccess?: BackgroundFetchSuccessHandler;
-  onBackgroundFetchFail?: BackgroundFetchFailHandler;
-  onBackgroundFetchAbort?: BackgroundFetchAbortHandler;
 }

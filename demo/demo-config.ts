@@ -1,6 +1,4 @@
-/// <reference lib="webworker" />
-
-import { SwSetupConfig } from './src/config';
+import { SwSetupConfig } from 'sw-builder';
 
 const config: SwSetupConfig = {
   target: 'example/service-worker.js',

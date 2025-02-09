@@ -1,41 +1,33 @@
 #!/usr/bin/env node
 
-import path from "path";
-import chokidar from "chokidar";
-import { buildServiceWorker } from "./build";
-import { readConfigFile } from "./read-file";
+import path from 'path';
+import chokidar from 'chokidar';
+import { buildServiceWorker } from './build';
+import { readConfigFile } from './read-file';
 
-export { SwSetupConfig } from "./config";
+export * from './interfaces';
 
 /**
  * Main function to parse arguments, load config, and build the service worker.
  */
 async function main() {
   const configFile = getConfigFilePath();
-  const shouldWatch = process.argv.includes("--watch");
+  const shouldWatch = process.argv.includes('--watch');
   if (!configFile) {
-    console.error(
-      "Error: Please provide a configuration file with --config=<path>",
-    );
+    console.error('Error: Please provide a configuration file with --config=<path>');
     process.exit(1);
   }
 
-  const entryPoint = resolveEntryPoint("../builder/src/index.ts");
   const configPath = path.resolve(process.cwd(), configFile);
 
   async function build() {
     try {
       const config = readConfigFile(configPath);
 
-      await buildServiceWorker(config, entryPoint);
-      console.log(
-        `\x1b[32mService worker built successfully to \x1b[3m'${config.target}'\x1b[0m`,
-      );
+      await buildServiceWorker(config);
+      console.log(`\x1b[32mService worker built successfully to \x1b[3m'${config.target}'\x1b[0m`);
     } catch (error) {
-      console.error(
-        "Error loading configuration or building service worker:",
-        error,
-      );
+      console.error('Error loading configuration or building service worker:', error);
       process.exit(1);
     }
   }
@@ -45,15 +37,11 @@ async function main() {
 
   // If `--watch` flag is present, set up file watching
   if (shouldWatch) {
-    console.log(
-      `\x1b[3m\x1b[34mWatching for changes in ${configPath}...\x1b[0m`,
-    );
+    console.log(`\x1b[3m\x1b[34mWatching for changes in ${configPath}...\x1b[0m`);
     const watcher = chokidar.watch(configPath, { persistent: true });
 
-    watcher.on("change", async () => {
-      console.log(
-        "\x1b[3m\x1b[33mConfig file changed. Rebuilding service worker...\x1b[0m",
-      );
+    watcher.on('change', async () => {
+      console.log('\x1b[3m\x1b[33mConfig file changed. Rebuilding service worker...\x1b[0m');
       await build();
     });
   }
@@ -65,7 +53,7 @@ async function main() {
  */
 function getConfigFilePath(): string | null {
   const args = process.argv.slice(2);
-  return args.find((arg) => arg.startsWith("--config="))?.split("=")[1] || null;
+  return args.find((arg) => arg.startsWith('--config='))?.split('=')[1] || null;
 }
 
 /**
