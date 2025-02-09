@@ -20,7 +20,41 @@ A powerful TypeScript library that simplifies service worker development by solv
 ## Installation
 
 ```bash
-npm install sw-builder --save-dev
+npm install wf-builder --save-dev
+```
+
+## Command Line Interface
+
+The library provides a CLI tool for easy usage:
+
+```bash
+# Using npx
+npx wf-builder --config=<path> [options]
+
+# Or if installed globally
+npm install -g wf-builder
+wf-builder --config=<path> [options]
+```
+
+### CLI Options
+
+| Option | Description |
+|--------|-------------|
+| `--config=<path>` | Path to config file (required) |
+| `--watch` | Watch mode - rebuild on changes |
+| `--help` | Show help message |
+
+### Examples
+
+```bash
+# Basic usage
+wf-builder --config=sw-config.ts
+
+# Watch mode
+wf-builder --config=sw-config.ts --watch
+
+# Show help
+wf-builder --help
 ```
 
 ## Quick Start

@@ -1,5 +1,5 @@
-import { SwSetupConfig } from 'sw-builder';
 import path from 'path';
+import type { SwSetupConfig } from 'sw-builder';
 
 const config: SwSetupConfig = {
   target: path.resolve(__dirname, './service-worker.js'),

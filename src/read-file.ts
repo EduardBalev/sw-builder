@@ -1,5 +1,6 @@
 import path from 'path';
-import { SwSetupConfig } from './interfaces';
+import { register } from 'ts-node';
+import { SwSetupConfig } from './interfaces/config';
 
 /**
  * Validates the configuration object
@@ -29,22 +30,20 @@ function validateConfig(config: any): SwSetupConfig {
  * @returns {SwSetupConfig} - The parsed configuration object.
  */
 export function readConfigFile(configPath: string): SwSetupConfig {
-  const ext = path.extname(configPath);
-
   try {
-    let config;
-    switch (ext) {
-      case '.js':
-        config = readJavaScriptConfig(configPath);
-        break;
-      case '.ts':
-        config = readTypeScriptConfig(configPath);
-        break;
-      default:
-        throw new Error('Unsupported config file extension. Supported types: .js, .ts');
+    // Register ts-node for TypeScript files
+    if (configPath.endsWith('.ts')) {
+      register({
+        compilerOptions: {
+          module: 'commonjs',
+          moduleResolution: 'node',
+        },
+      });
     }
 
-    return validateConfig(config);
+    // Try to load the config
+    const config = require(configPath);
+    return validateConfig(config.default || config);
   } catch (error) {
     console.error('Error reading configuration file:', error);
     process.exit(1);

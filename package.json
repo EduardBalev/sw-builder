@@ -13,7 +13,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && chmod +x ./dist/index.js",
     "prepare": "npm run build",
     "dev": "ts-node -P demo/tsconfig.json ./src/index.ts --config=./demo/demo-config.ts --watch",
     "serve": "http-server demo -p 3000",
