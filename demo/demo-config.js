@@ -5,5 +5,5 @@ module.exports = {
   sourcePath: path.resolve(__dirname, './demo-source.ts'),
   minify: false,
   sourcemap: true,
-  debug: false,
+  debug: true,
 };

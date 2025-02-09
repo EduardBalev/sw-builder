@@ -150,15 +150,33 @@ export const onFetch: FetchHandler = (event) => {
 
 ## Development
 
-To run the demo:
+The project includes several npm scripts for development:
 
 ```bash
-# Build the demo service worker
-npm run build:demo
+# Development mode (uses source TypeScript files)
+npm run dev         # Runs the builder in watch mode using TypeScript source
+npm run serve       # Starts the demo server
 
-# Serve the demo page
-npm run serve:demo
+# Combined development
+npm run demo        # Runs both dev and serve in parallel
+
+# Production mode (uses built JavaScript files)
+npm run build       # Builds the library
+npm run start       # Runs the built version in watch mode
 ```
+
+### Development vs Production Scripts
+
+- Development scripts (`dev`, `serve`, `demo`):
+  - Run directly from TypeScript source
+  - Better for development with source maps
+  - Faster feedback cycle
+  - Used when developing the library
+
+- Production scripts (`build`, `start`):
+  - Use the built JavaScript files
+  - Test the actual published package behavior
+  - Used to verify the built package works correctly
 
 ## License
 

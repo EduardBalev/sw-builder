@@ -19,7 +19,7 @@ export async function buildServiceWorker(config: SwSetupConfig) {
     throw new Error(`Source file not found: ${config.sourcePath}`);
   }
 
-  const tempFile = path.resolve(__dirname, '__temp_merged.ts');
+  const tempFile = path.resolve(__dirname, '.temp.service-worker.bundle.ts');
 
   try {
     // Read and process files
@@ -63,7 +63,7 @@ export async function buildServiceWorker(config: SwSetupConfig) {
       },
       absWorkingDir: process.cwd(),
       alias: {
-        'sw-builder': path.resolve(__dirname, './interfaces/public-api.ts'),
+        'sw-builder': path.resolve(__dirname, 'interfaces/public-api.js'),
       },
     });
 

@@ -15,9 +15,10 @@
   "scripts": {
     "build": "tsc",
     "prepare": "npm run build",
-    "serve:demo": "http-server demo -p 3000",
-    "build:demo": "ts-node -P demo/tsconfig.json ./src/index.ts --config=./demo/demo-config.ts",
-    "start:demo": "npm run build && node ./dist/index.js --config=./demo/demo-config.js --watch"
+    "dev": "ts-node -P demo/tsconfig.json ./src/index.ts --config=./demo/demo-config.ts --watch",
+    "serve": "http-server demo -p 3000",
+    "start": "npm run build && node ./dist/index.js --config=./demo/demo-config.js --watch",
+    "demo": "npm-run-all --parallel serve dev"
   },
   "keywords": [
     "service-worker",
@@ -41,7 +42,8 @@
     "esbuild": "^0.24.0",
     "http-server": "^14.1.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "npm-run-all": "^4.1.5"
   },
   "peerDependencies": {
     "typescript": ">=4.0.0"

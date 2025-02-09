@@ -7,13 +7,15 @@
     debug: false
   };
 
-  // src/__temp_merged.ts
-  CONFIG.debug = false;
+  // src/.temp.service-worker.bundle.ts
+  CONFIG.debug = true;
   function registerEvent(eventName, fn) {
     if (typeof fn !== "function") {
       return;
     }
+    console.log("Registering event successfully: ", eventName);
     SW.addEventListener(eventName, (event) => {
+      console.log("Event triggered: ", eventName, event);
       fn(event);
     });
   }
