@@ -1,15 +1,9 @@
+const path = require('path');
+
 module.exports = {
-  target: "example/service-worker.js",
+  target: path.resolve(__dirname, './service-worker.js'),
+  sourcePath: path.resolve(__dirname, './demo-source.ts'),
   minify: false,
-  sourcemap: false,
-  debug: true,
-  events: {
-    install: [(event) => console.log("Custom install function")],
-    fetch: [
-      (event) => {
-        console.log("Custom fetch handling");
-        event.respondWith(fetch(event.request));
-      },
-    ],
-  },
+  sourcemap: true,
+  debug: false,
 };

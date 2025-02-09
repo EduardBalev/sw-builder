@@ -14,10 +14,9 @@
     "lib": ["ES2020", "WebWorker"],
     "baseUrl": ".",
     "paths": {
-      "sw-builder": ["../src/interfaces/public-api.ts"],
-      "sw-builder/*": ["../src/interfaces/*"]
+      "sw-builder": ["../src/interfaces/public-api"]
     }
   },
-  "include": ["**/*"],
+  "include": ["./**/*", "../src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

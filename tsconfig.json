@@ -11,12 +11,7 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "lib": ["ES2020", "WebWorker"],
-    "baseUrl": ".",
-    "paths": {
-      "sw-builder": ["src/interfaces/public-api.ts"],
-      "sw-builder/*": ["src/interfaces/*"]
-    }
+    "lib": ["ES2020", "WebWorker"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
