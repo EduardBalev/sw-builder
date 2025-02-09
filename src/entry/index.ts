@@ -1,5 +1,6 @@
 import { registerEventListenerFn } from './register-event';
 import { globalDeclarations } from './global-declarations';
+import { SwConfig } from '../interfaces/config';
 
 /**
  * Creates the entry point content for the service worker.
@@ -11,9 +12,9 @@ import { globalDeclarations } from './global-declarations';
  *
  * @returns The complete entry point content as a string
  */
-export function createEntryContent(): string {
+export function createEntryContent(config: SwConfig): string {
   return `
-    ${globalDeclarations}
-    ${registerEventListenerFn}
+    ${globalDeclarations(config)}
+    ${registerEventListenerFn(config)}
   `;
 }
