@@ -1,5 +1,5 @@
 {
-  "name": "sw-builder",
+  "name": "@simple_js/sw-builder",
   "version": "1.0.0",
   "description": "A powerful TypeScript library that simplifies service worker development",
   "main": "./dist/index.js",

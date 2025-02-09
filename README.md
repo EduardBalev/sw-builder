@@ -20,7 +20,7 @@ A powerful TypeScript library that simplifies service worker development by solv
 ## Installation
 
 ```bash
-npm install wf-builder --save-dev
+npm install @simple_js/sw-builder --save-dev
 ```
 
 ## Command Line Interface
@@ -29,11 +29,11 @@ The library provides a CLI tool for easy usage:
 
 ```bash
 # Using npx
-npx wf-builder --config=<path> [options]
+npx @simple_js/sw-builder --config=<path> [options]
 
 # Or if installed globally
-npm install -g wf-builder
-wf-builder --config=<path> [options]
+npm install -g @simple_js/sw-builder
+sw-builder --config=<path> [options]
 ```
 
 ### CLI Options
@@ -62,7 +62,7 @@ wf-builder --help
 1. Create a configuration file (e.g., `sw-config.ts`):
 
 ```typescript
-import { SwSetupConfig } from 'sw-builder';
+import { SwSetupConfig } from '@simple_js/sw-builder';
 
 const config: SwSetupConfig = {
   target: './public/service-worker.js',
@@ -78,8 +78,8 @@ export default config;
 2. Create your service worker handlers (e.g., `src/sw-handlers.ts`):
 
 ```typescript
-import type { InstallHandler, ActivateHandler, FetchHandler } from 'sw-builder';
-import { SW } from 'sw-builder';
+import type { InstallHandler, ActivateHandler, FetchHandler } from '@simple_js/sw-builder';
+import { SW } from '@simple_js/sw-builder';
 
 export const onInstall: InstallHandler = (event) => {
   console.log('Service Worker installing');
@@ -162,7 +162,7 @@ your-project/
 The `SW` object provides type-safe access to the ServiceWorkerGlobalScope:
 
 ```typescript
-import { SW } from 'sw-builder';
+import { SW } from '@simple_js/sw-builder';
 
 SW.skipWaiting();
 SW.clients.claim();
@@ -175,7 +175,7 @@ Event handlers must be exported to be included in the final service worker:
 All event handlers are properly typed:
 
 ```typescript
-import type { FetchHandler } from 'sw-builder';
+import type { FetchHandler } from '@simple_js/sw-builder';
 
 export const onFetch: FetchHandler = (event) => {
   // event is properly typed as FetchEvent
