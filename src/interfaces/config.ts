@@ -3,5 +3,5 @@ export interface SwSetupConfig {
   minify: boolean;
   sourcemap: boolean;
   debug: boolean;
-  events: object;
+  sourcePath: string; // Path to the source file containing event handlers
 }

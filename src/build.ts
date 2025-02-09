@@ -1,6 +1,9 @@
-import esbuild from "esbuild";
-import path from "path";
-import fs from "fs";
+import esbuild from 'esbuild';
+import fs from 'fs';
+import path from 'path';
+import { mergeContents } from './content-merger';
+import { createEntryContent } from './entry';
+import { extractExports, removeExportKeywords } from './exports-handler';
 
 /**
  * Builds the service worker using esbuild to bundle all necessary files
@@ -8,130 +11,68 @@ import fs from "fs";
  *
  * @param {object} config - The configuration object loaded from the user's file.
  */
-export async function buildServiceWorker(
-  config: { [key: string]: any },
-  entryPoint: string,
-) {
-  const injectedConfigPath = path.resolve(__dirname, "__injectedConfig.js"); // Path for temporary injected config
+export async function buildServiceWorker(config: { [key: string]: any }) {
+  const sourceFilePath = path.resolve(process.cwd(), config.sourcePath);
+
+  if (!fs.existsSync(sourceFilePath)) {
+    throw new Error(`Source file not found: ${config.sourcePath}`);
+  }
+
+  const tempFile = path.resolve(__dirname, '__temp_merged.ts');
 
   try {
-    // Generate the temporary config file
-    createInjectedConfigFile(config, injectedConfigPath);
+    // Read and process files
+    const entryContent = createEntryContent();
+    const sourceContent = fs.readFileSync(sourceFilePath, 'utf-8');
 
-    await esbuild.build({
-      entryPoints: [entryPoint],
-      bundle: true,
-      minify: Boolean(config.minify), // Enable minification for smaller file size
-      sourcemap: Boolean(config.sourcemap), // Enable source map generation
-      outfile: config.target ?? "service-worker.js",
-      inject: [injectedConfigPath],
-      target: ["chrome58", "firefox57"], // Set target environments if needed
-      format: "esm", // Use ESM format for compatibility
+    const exportedItems = extractExports(sourceContent);
+    const cleanedSourceContent = removeExportKeywords(sourceContent);
+
+    console.log('\nExported items from source file:', exportedItems);
+
+    // Merge contents
+    const mergedContent = mergeContents({
+      entryContent,
+      sourceContent: cleanedSourceContent,
+      exportedItems,
     });
+
+    // Write merged content
+    fs.writeFileSync(tempFile, mergedContent);
+
+    // Build with esbuild
+    await esbuild.build({
+      entryPoints: [tempFile],
+      bundle: true,
+      minify: Boolean(config.minify),
+      sourcemap: Boolean(config.sourcemap),
+      outfile: config.target ?? 'service-worker.js',
+      target: ['chrome58', 'firefox57'],
+      format: 'iife', // Changed to IIFE to ensure proper self context
+      platform: 'browser', // Explicitly set browser platform
+      conditions: ['worker'], // Add worker condition for proper imports
+      define: {
+        'process.env.DEBUG': JSON.stringify(config.debug),
+        self: 'self', // Ensure self is properly defined
+        global: 'self', // Map global to self for service worker context
+      },
+      loader: {
+        '.ts': 'ts',
+        '.js': 'js',
+      },
+      absWorkingDir: process.cwd(),
+      alias: {
+        'sw-builder': path.resolve(__dirname, './interfaces'),
+      },
+    });
+
+    console.log(`Service worker built from ${config.sourcePath}`);
+  } catch (error) {
+    console.error('Error building service worker:', error);
+    process.exit(1);
   } finally {
-    // Clean up the temporary config file
-    cleanupInjectedConfigFile(injectedConfigPath);
+    if (fs.existsSync(tempFile)) {
+      fs.unlinkSync(tempFile);
+    }
   }
-}
-
-/**
- * Creates a temporary config file for esbuild injection.
- *
- * @param {object} config - The configuration object.
- * @param {string} filePath - The path where the temporary config file should be created.
- */
-function createInjectedConfigFile(
-  config: { [key: string]: any },
-  filePath: string,
-) {
-  const configContent = generateConfigContent(config);
-  fs.writeFileSync(filePath, configContent);
-}
-
-/**
- * Generates the content for the injected config file.
- *
- * @param {object} config - The configuration object.
- * @returns {string} - The generated config content.
- */
-function generateConfigContent(config: { [key: string]: any }): string {
-  const configObjectString = JSON.stringify({ debug: config.debug });
-  const eventsString = JSON.stringify(config.events, customStringifyReplacer)
-    .replace(/\\"/g, '"')
-    .replace(/\\n/g, "")
-    .trim()
-    .slice(1, -1); // Remove surrounding braces
-
-  return `export const CONFIG = ${configObjectString}; export const EVENTS = ${eventsString};`;
-}
-
-/**
- * Cleans up the temporary config file.
- *
- * @param {string} filePath - The path to the temporary config file.
- */
-function cleanupInjectedConfigFile(filePath: string) {
-  if (fs.existsSync(filePath)) {
-    fs.unlinkSync(filePath);
-  }
-}
-
-/**
- * Custom replacer function for JSON.stringify that converts functions
- * to their string representations and handles objects and arrays properly.
- */
-function customStringifyReplacer(key: string, value: { [key: string]: any }) {
-  if (value && typeof value === "object" && !Array.isArray(value)) {
-    // Convert the object to a string representation
-    return objectToString(value);
-  }
-  // Convert arrays and other types to strings
-  return arrayOrValueToString(value);
-}
-
-/**
- * Converts an object to a string representation where each key-value pair
- * is converted to a string. Handles nested structures.
- *
- * @param {Object} obj - The object to convert to a string.
- * @returns {string} A string representation of the object.
- */
-function objectToString(obj: { [key: string]: any }): string {
-  const keys = Object.keys(obj);
-  const str = keys
-    .map((key) => `${key}: ${arrayOrValueToString(obj[key])}`)
-    .join(", ");
-  return `{${str}}`;
-}
-
-/**
- * Converts an array or a non-object value to a string representation.
- * If the value is an array, each element is converted to a string.
- * If the value is a function, it is converted to its string representation.
- *
- * @param {any} value - The value to convert to a string.
- * @returns {string} A string representation of the array or value.
- */
-function arrayOrValueToString(value: any): string {
-  if (Array.isArray(value)) {
-    // Convert each array element to a string
-    const str = value.map((item) => functionToString(item)).join(", ");
-    return `[${str}]`;
-  }
-  // Convert non-array values (including functions) to a string
-  return functionToString(value);
-}
-
-/**
- * Converts a function to its string representation if it is a function,
- * otherwise returns the original value.
- *
- * @param {any} value - The value to convert to a string if it is a function.
- * @returns {string} The string representation of the function or the original value.
- */
-function functionToString(value: any): string {
-  if (typeof value === "function") {
-    return value.toString();
-  }
-  return JSON.stringify(value); // Use JSON.stringify for other types
 }
