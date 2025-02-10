@@ -1,6 +1,6 @@
 {
   "name": "@simple_js/sw-builder",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A powerful TypeScript library that simplifies service worker development",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -20,8 +20,10 @@
     "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
+    "prebuild": "rimraf dist",
     "build": "tsc && chmod +x ./dist/index.js",
-    "prepare": "npm run build",
+    "postbuild": "node ./scripts/postbuild.js",
+    "prepublishOnly": "npm run build",
     "dev": "ts-node -P demo/tsconfig.json ./src/index.ts --config=./demo/demo-config.ts --watch",
     "serve": "http-server demo -p 3000",
     "start": "npm run build && node ./dist/index.js --config=./demo/demo-config.js --watch",
@@ -53,14 +55,16 @@
   },
   "homepage": "https://github.com/EduardBalev/sw-builder#readme",
   "dependencies": {
-    "esbuild": "^0.24.0",
-    "chokidar": "^4.0.1"
+    "chokidar": "^4.0.1",
+    "esbuild": "^0.24.0"
   },
   "devDependencies": {
+    "@types/node": "^20.17.17",
     "http-server": "^14.1.1",
+    "npm-run-all": "^4.1.5",
+    "rimraf": "^5.0.5",
     "ts-node": "^10.9.2",
-    "typescript": "^5.6.3",
-    "npm-run-all": "^4.1.5"
+    "typescript": "^5.6.3"
   },
   "peerDependencies": {
     "typescript": ">=4.0.0"
