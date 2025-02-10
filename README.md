@@ -20,7 +20,41 @@ A powerful TypeScript library that simplifies service worker development by solv
 ## Installation
 
 ```bash
-npm install sw-builder --save-dev
+npm install @simple_js/sw-builder --save-dev
+```
+
+## Command Line Interface
+
+The library provides a CLI tool for easy usage:
+
+```bash
+# Using npx
+npx @simple_js/sw-builder --config=<path> [options]
+
+# Or if installed globally
+npm install -g @simple_js/sw-builder
+sw-builder --config=<path> [options]
+```
+
+### CLI Options
+
+| Option | Description |
+|--------|-------------|
+| `--config=<path>` | Path to config file (required) |
+| `--watch` | Watch mode - rebuild on changes |
+| `--help` | Show help message |
+
+### Examples
+
+```bash
+# Basic usage
+wf-builder --config=sw-config.ts
+
+# Watch mode
+wf-builder --config=sw-config.ts --watch
+
+# Show help
+wf-builder --help
 ```
 
 ## Quick Start
@@ -28,7 +62,7 @@ npm install sw-builder --save-dev
 1. Create a configuration file (e.g., `sw-config.ts`):
 
 ```typescript
-import { SwSetupConfig } from 'sw-builder';
+import { SwSetupConfig } from '@simple_js/sw-builder';
 
 const config: SwSetupConfig = {
   target: './public/service-worker.js',
@@ -44,8 +78,8 @@ export default config;
 2. Create your service worker handlers (e.g., `src/sw-handlers.ts`):
 
 ```typescript
-import type { InstallHandler, ActivateHandler, FetchHandler } from 'sw-builder';
-import { SW } from 'sw-builder';
+import type { InstallHandler, ActivateHandler, FetchHandler } from '@simple_js/sw-builder';
+import { SW } from '@simple_js/sw-builder';
 
 export const onInstall: InstallHandler = (event) => {
   console.log('Service Worker installing');
@@ -128,7 +162,7 @@ your-project/
 The `SW` object provides type-safe access to the ServiceWorkerGlobalScope:
 
 ```typescript
-import { SW } from 'sw-builder';
+import { SW } from '@simple_js/sw-builder';
 
 SW.skipWaiting();
 SW.clients.claim();
@@ -141,7 +175,7 @@ Event handlers must be exported to be included in the final service worker:
 All event handlers are properly typed:
 
 ```typescript
-import type { FetchHandler } from 'sw-builder';
+import type { FetchHandler } from '@simple_js/sw-builder';
 
 export const onFetch: FetchHandler = (event) => {
   // event is properly typed as FetchEvent

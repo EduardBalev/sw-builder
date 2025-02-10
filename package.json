@@ -1,19 +1,26 @@
 {
-  "name": "sw-builder",
+  "name": "@simple_js/sw-builder",
   "version": "1.0.0",
   "description": "A powerful TypeScript library that simplifies service worker development",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "sw-builder": "./dist/index.js"
+    "sw-builder": "dist/index.js"
   },
   "files": [
     "dist",
     "README.md",
     "LICENSE"
   ],
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && chmod +x ./dist/index.js",
     "prepare": "npm run build",
     "dev": "ts-node -P demo/tsconfig.json ./src/index.ts --config=./demo/demo-config.ts --watch",
     "serve": "http-server demo -p 3000",
@@ -25,9 +32,17 @@
     "typescript",
     "builder",
     "pwa",
-    "web-worker"
+    "web-worker",
+    "service worker builder",
+    "typescript service worker",
+    "pwa builder",
+    "worker builder"
   ],
-  "author": "Eduard Balev (https://github.com/EduardBalev)",
+  "author": {
+    "name": "Eduard Balev",
+    "email": "baleveduard@gmail.com",
+    "url": "https://github.com/EduardBalev"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
