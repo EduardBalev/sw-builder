@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import path from 'path';
 import chokidar from 'chokidar';
+import path from 'path';
 import { buildServiceWorker } from './build';
 import { readConfigFile } from './read-file';
 
@@ -49,10 +49,8 @@ async function main() {
     try {
       const config = readConfigFile(configPath);
       await buildServiceWorker(config);
-      console.log(`\x1b[32mService worker built successfully to \x1b[3m'${config.target}'\x1b[0m`);
       return config;
     } catch (error) {
-      console.error('Build failed:', error);
       process.exit(1);
     }
   }

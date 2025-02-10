@@ -1,9 +1,6 @@
 (() => {
   const SW = self;
-  const CONFIG = {
-    debug: false
-  };
-  CONFIG.debug = true;
+  const CONFIG = { debug: true };
   function registerEvent(eventName, fn) {
     if (typeof fn !== "function") {
       return;

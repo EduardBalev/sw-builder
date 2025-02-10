@@ -9,10 +9,6 @@ import { SwConfig } from '../interfaces/config';
 export const globalDeclarations = (config: SwConfig) => `
   /// <reference lib="webworker" />
   
-  declare const self: ServiceWorkerGlobalScope;
-  declare const CONFIG: { debug: boolean };
-  CONFIG.debug = ${config.debug};
-  
-  // Initialize hooks container
-  const HOOKS: Record<string, Function> = {};
+  const SW = self;
+  const CONFIG = { debug: ${config.debug} };
 `;
