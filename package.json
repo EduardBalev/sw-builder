@@ -5,7 +5,7 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "sw-builder": "dist/index.js"
+    "sw-builder": "./dist/index.js"
   },
   "files": [
     "dist",
@@ -52,9 +52,11 @@
     "url": "https://github.com/EduardBalev/sw-builder/issues"
   },
   "homepage": "https://github.com/EduardBalev/sw-builder#readme",
-  "devDependencies": {
-    "chokidar": "^4.0.1",
+  "dependencies": {
     "esbuild": "^0.24.0",
+    "chokidar": "^4.0.1"
+  },
+  "devDependencies": {
     "http-server": "^14.1.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.3",
@@ -62,5 +64,12 @@
   },
   "peerDependencies": {
     "typescript": ">=4.0.0"
-  }
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/interfaces/public-api.d.ts",
+      "default": "./dist/interfaces/public-api.js"
+    }
+  },
+  "type": "commonjs"
 }

@@ -1,13 +1,8 @@
 (() => {
-  // src/interfaces/sw.ts
-  var SW = typeof self !== "undefined" ? self : {};
-
-  // src/interfaces/config.ts
-  var CONFIG = {
+  const SW = self;
+  const CONFIG = {
     debug: false
   };
-
-  // src/.temp.service-worker.bundle.ts
   CONFIG.debug = true;
   function registerEvent(eventName, fn) {
     if (typeof fn !== "function") {
@@ -19,20 +14,19 @@
       fn(event);
     });
   }
-  var onInstall = (event) => {
+  const onInstall = (event) => {
     console.log("Service Worker installing");
     console.log("Example using config", CONFIG);
     SW.skipWaiting();
   };
-  var onActivate = (event) => {
+  const onActivate = (event) => {
     console.log("Service Worker activating");
     event.waitUntil(SW.clients.claim());
   };
-  var onFetch = (event) => {
+  const onFetch = (event) => {
     console.log("Handling fetch event");
   };
   registerEvent("install", onInstall);
   registerEvent("activate", onActivate);
   registerEvent("fetch", onFetch);
 })();
-//# sourceMappingURL=service-worker.js.map
