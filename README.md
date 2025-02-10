@@ -125,16 +125,37 @@ The `SwSetupConfig` interface supports the following options:
 SW Builder supports all standard service worker events with type-safe handlers:
 
 - `onInstall`: Called when the service worker is installing
+  - Interface: `(event: ExtendableEvent) => void`
+
 - `onActivate`: Called when the service worker is activating
+  - Interface: `(event: ExtendableEvent) => void`
+
 - `onFetch`: Called for fetch events
+  - Interface: `(event: FetchEvent) => void | Promise<Response>`
+
 - `onMessage`: Called for message events
+  - Interface: `(event: ExtendableMessageEvent) => void`
+
 - `onPush`: Called for push notifications
+  - Interface: `(event: PushEvent) => void`
+
 - `onSync`: Called for background sync
+  - Interface: `(event: SyncEvent) => void`
+
 - `onNotificationClick`: Called when notifications are clicked
+  - Interface: `(event: NotificationEvent) => void`
+
 - `onNotificationClose`: Called when notifications are closed
+  - Interface: `(event: NotificationEvent) => void`
+
 - `onBackgroundFetchSuccess`: Called on successful background fetch
+  - Interface: `(event: BackgroundFetchEvent) => void`
+
 - `onBackgroundFetchFail`: Called on failed background fetch
+  - Interface: `(event: BackgroundFetchEvent) => void`
+
 - `onBackgroundFetchAbort`: Called when background fetch is aborted
+  - Interface: `(event: BackgroundFetchEvent) => void`
 
 ## Debug Mode
 
