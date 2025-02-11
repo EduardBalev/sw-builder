@@ -57,7 +57,9 @@ export function removeExportKeywords(sourceContent: string): string {
       .replace(/^export\s*{[^}]*};?\s*$/gm, '')
       // Remove 'export default'
       .replace(/^export\s+default\s+/gm, '')
-      // Remove 'export type'
-      .replace(/^export\s+type\s+/gm, 'type ')
+      // Remove 'export' from type/interface declarations
+      .replace(/^export\s+(type|interface)\s+/gm, '$1 ')
+      // Clean up any extra newlines
+      .replace(/\n\s*\n/g, '\n')
   );
 }

@@ -27,7 +27,10 @@
     "dev": "ts-node -P demo/tsconfig.json ./src/index.ts --config=./demo/demo-config.ts --watch",
     "serve": "http-server demo -p 3000",
     "start": "npm run build && node ./dist/index.js --config=./demo/demo-config.js --watch",
-    "demo": "npm-run-all --parallel serve dev"
+    "demo": "npm-run-all --parallel serve dev",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "keywords": [
     "service-worker",
@@ -64,7 +67,10 @@
     "npm-run-all": "^4.1.5",
     "rimraf": "^5.0.5",
     "ts-node": "^10.9.2",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "@types/jest": "^29.5.12",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2"
   },
   "peerDependencies": {
     "typescript": ">=4.0.0"

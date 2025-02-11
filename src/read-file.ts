@@ -1,4 +1,3 @@
-import path from 'path';
 import { register } from 'ts-node';
 import { SwSetupConfig } from './interfaces/config';
 
@@ -46,29 +45,6 @@ export function readConfigFile(configPath: string): SwSetupConfig {
     return validateConfig(config.default || config);
   } catch (error) {
     console.error('Error reading configuration file:', error);
-    process.exit(1);
+    throw error;
   }
-}
-
-/**
- * Reads a JavaScript configuration file.
- *
- * @param {string} configPath - The path to the .js config file.
- * @returns {SwSetupConfig} - The parsed configuration object.
- */
-function readJavaScriptConfig(configPath: string): SwSetupConfig {
-  delete require.cache[require.resolve(configPath)]; // Clear cache to allow fresh read
-  return require(configPath).default || require(configPath);
-}
-
-/**
- * Reads a TypeScript configuration file using ts-node.
- *
- * @param {string} configPath - The path to the .ts config file.
- * @returns {SwSetupConfig} - The parsed configuration object.
- */
-function readTypeScriptConfig(configPath: string): SwSetupConfig {
-  require('ts-node').register(); // Enable TypeScript support at runtime
-  delete require.cache[require.resolve(configPath)];
-  return require(configPath).default || require(configPath);
 }
