@@ -70,6 +70,28 @@ function handleImport(importPath: string, filePath: string): string {
 }
 
 /**
+ * Removes export keywords from content while preserving declarations
+ *
+ * @param {string} content - The content to process
+ * @returns {string} Content with export keywords removed
+ */
+function removeExports(content: string): string {
+  return (
+    content
+      // Remove 'export default' from class/function declarations
+      .replace(/export\s+default\s+(class|function)\s+/g, '$1 ')
+      // Remove 'export default' from other expressions
+      .replace(/export\s+default\s+/g, '')
+      // Remove 'export' from const/let/var/function/class declarations
+      .replace(/export\s+(const|let|var|function|class)\s+/g, '$1 ')
+      // Remove 'export' from named exports
+      .replace(/export\s*{[^}]*}/g, '')
+      // Remove any remaining standalone 'export' keywords
+      .replace(/^\s*export\s+/gm, '')
+  );
+}
+
+/**
  * Merges all service worker components into a single file
  *
  * This function:
@@ -100,6 +122,8 @@ export function mergeContents({ sourceContent, exportedItems, sourcePath, config
 
   // Process and inline all imports
   const inlinedContent = inlineImports(sourceContent, sourcePath);
+  // Remove export keywords
+  const processedContent = removeExports(inlinedContent);
   const entryContent = createEntryContent(config);
 
   // Always include entry content, even for empty files
@@ -108,7 +132,7 @@ export function mergeContents({ sourceContent, exportedItems, sourcePath, config
     ${entryContent}
 
     // Inlined dependencies and source content
-    ${inlinedContent}
+    ${processedContent}
 
     // Register hooks
     ${registeredHooks}
