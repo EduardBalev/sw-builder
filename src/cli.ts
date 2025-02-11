@@ -21,8 +21,6 @@ Example:
   wf-builder --config=sw-config.ts --watch
 `;
 
-export * from './interfaces';
-
 /**
  * Main function to parse arguments, load config, and build the service worker.
  */
