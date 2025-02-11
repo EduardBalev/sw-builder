@@ -5,10 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.5] - 2025-02-11
+## [1.0.5-1.0.7] - 2025-02-11
 
 ### Fixed
-- TypeScript types are now exported from the package
+- Fixed import handling in content merger (#4)
 
 ## [1.0.4] - 2025-02-11
 
@@ -27,7 +27,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Added webworker reference to output d.ts files
-- Fixed build script to properly handle postbuild steps
 - Improved TypeScript type definitions
 
 ## [1.0.2] - 2025-02-10
@@ -35,7 +34,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Simplified global declarations
 - Improved SW and CONFIG initialization
-- Updated build process
 
 ## [1.0.1] - 2025-02-10
 
@@ -47,7 +45,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Simplified build process to output pure browser code
 - Improved handling of imports and exports
-- Enhanced documentation with comprehensive JSDoc comments
 - Changed build output to use direct TypeScript transformation
 
 ### Added
