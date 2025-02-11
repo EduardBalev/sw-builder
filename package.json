@@ -65,7 +65,7 @@
   "homepage": "https://github.com/EduardBalev/sw-builder#readme",
   "dependencies": {
     "chokidar": "^4.0.1",
-    "esbuild": "^0.24.0"
+    "esbuild": "^0.25.0"
   },
   "devDependencies": {
     "@types/node": "^20.17.17",
