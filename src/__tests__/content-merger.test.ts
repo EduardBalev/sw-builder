@@ -75,10 +75,15 @@ describe('content-merger', () => {
   });
 
   it('should handle multiple imports using same constant', () => {
-    const constantContent = 'export const API_URL = "https://api.example.com";';
+    const configContent = 'export const API_URL = "https://api.example1.com";';
+    const constantsContent = 'export let API_URL = "https://api.example2.com";';
 
     jest.spyOn(fs, 'existsSync').mockImplementation((p) => p.toString().endsWith('.ts'));
-    jest.spyOn(fs, 'readFileSync').mockReturnValue(constantContent);
+    jest.spyOn(fs, 'readFileSync').mockImplementation((p) => {
+      if (p.toString().includes('config')) return configContent;
+      if (p.toString().includes('constants')) return constantsContent;
+      return '';
+    });
 
     const result = mergeContents({
       sourceContent: `
@@ -99,8 +104,8 @@ describe('content-merger', () => {
     const matches = result.match(/const API_URL/g) || [];
 
     expect(matches.length).toBe(1);
-    expect(result).toContain('const API_URL = "https://api.example.com"');
-    expect(result).toContain('const BaseUrl = "https://api.example.com"');
+    expect(result).toContain('const API_URL = "https://api.example1.com"');
+    expect(result).toContain('let BaseUrl = "https://api.example2.com"');
     expect(result).toContain("fetch(API_URL + '/data')");
   });
 
@@ -135,12 +140,17 @@ describe('content-merger', () => {
       [
         'source.ts',
         `
-        import { helperA } from "./a";
-        import { directC } from "./c";
+        import { helperA, helperA2 } from "./a";
+        import {
+          directC,
+          directC2
+        } from "./utils";
         
         self.addEventListener('fetch', () => {
           helperA();
+          helperA2();
           directC();
+          directC2();
         });
       `,
       ],
@@ -152,26 +162,33 @@ describe('content-merger', () => {
           console.log("A helper");
           helperB();
         };
+        export const helperA2 = () => {
+          console.log("A helper 2");
+        };
       `,
       ],
       [
         'b.ts',
         `
-        import { helperC } from "./c";
-        export const helperB = () => {
+        import { helperC, directC as _directC } from "./utils";
+        export function helperB() {
           console.log("B helper");
           helperC();
+          _directC();
         };
       `,
       ],
       [
-        'c.ts',
+        'utils.ts',
         `
         export const helperC = () => {
           console.log("C helper");
         };
-        export const directC = () => {
+        export async function directC() {
           console.log("Direct C");
+        };
+        export function directC2() {
+          console.log("Direct C 2");
         };
       `,
       ],
@@ -197,18 +214,97 @@ describe('content-merger', () => {
 
     // Verify all helper functions are present
     expect(result).toContain('helperA = () =>');
-    expect(result).toContain('helperB = () =>');
+    expect(result).toContain('helperA2 = () =>');
+    expect(result).toContain('function helperB()');
     expect(result).toContain('helperC = () =>');
-    expect(result).toContain('directC = () =>');
+    expect(result).toContain('async function directC()');
+    expect(result).toContain('function directC2()');
 
     // Verify imports are removed
     expect(result).not.toContain('import {');
+    console.log(result);
 
     // Verify function declarations are preserved
     expect(result).toContain('console.log("A helper")');
+    expect(result).toContain('console.log("A helper 2")');
     expect(result).toContain('console.log("B helper")');
     expect(result).toContain('console.log("C helper")');
     expect(result).toContain('console.log("Direct C")');
+    expect(result).toContain('console.log("Direct C 2")');
+
+    // Restore mocks
+    jest.restoreAllMocks();
+  });
+
+  it('should handle circular dependencies correctly', () => {
+    // Create mock files with circular imports
+    const mockFiles = new Map([
+      [
+        'source.ts',
+        `
+        import { componentA } from "./a";
+        
+        self.addEventListener('fetch', () => {
+          componentA();
+        });
+        `,
+      ],
+      [
+        'a.ts',
+        `
+        import { componentB } from "./b";
+        export const componentA = () => {
+          console.log("Component A");
+          componentB();
+        };
+        `,
+      ],
+      [
+        'b.ts',
+        `
+        import { componentA } from "./a";  // Circular import
+        export const componentB = () => {
+          console.log("Component B");
+          // Try to use componentA
+          if (Math.random() > 0.5) {
+            componentA();
+          }
+        };
+        `,
+      ],
+    ]);
+
+    // Mock the file system operations
+    jest.spyOn(fs, 'existsSync').mockImplementation((path) => {
+      const fileName = path.toString().split('/').pop();
+      return mockFiles.has(fileName!);
+    });
+
+    jest.spyOn(fs, 'readFileSync').mockImplementation((path: fs.PathOrFileDescriptor) => {
+      const fileName = path.toString().split('/').pop();
+      return mockFiles.get(fileName!) || '';
+    });
+
+    const result = mergeContents({
+      sourceContent: mockFiles.get('source.ts')!,
+      exportedItems: new Set(),
+      sourcePath: 'source.ts',
+      config: { debug: false },
+    });
+
+    // Verify components are present
+    expect(result).toContain('componentA = () =>');
+    expect(result).toContain('componentB = () =>');
+
+    // Verify function declarations are preserved
+    expect(result).toContain('console.log("Component A")');
+    expect(result).toContain('console.log("Component B")');
+
+    // Verify each component is only declared once
+    const componentAMatches = result.match(/componentA\s*=/g) || [];
+    const componentBMatches = result.match(/componentB\s*=/g) || [];
+    expect(componentAMatches.length).toBe(1);
+    expect(componentBMatches.length).toBe(1);
 
     // Restore mocks
     jest.restoreAllMocks();

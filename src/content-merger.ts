@@ -5,6 +5,9 @@ import { callRegisterEvent } from './entry/register-event';
 import { hooksMap } from './interfaces';
 import { SwConfig } from './interfaces/config';
 
+// Track processed files to prevent circular imports
+const processedFiles = new Set<string>();
+
 /**
  * Options for merging service worker content
  * @interface MergeOptions
@@ -39,6 +42,13 @@ function resolveImport(importPath: string, fromPath: string): string {
 }
 
 /**
+ * Resets the processed files tracking
+ */
+function resetProcessedFiles() {
+  processedFiles.clear();
+}
+
+/**
  * Processes and inlines all imports in the given content
  *
  * @param {string} content - The source content containing imports to process
@@ -46,65 +56,78 @@ function resolveImport(importPath: string, fromPath: string): string {
  * @returns {string} Content with all imports inlined and type imports removed
  */
 function inlineImports(content: string, filePath: string): string {
+  // Skip if we've already processed this file
+  if (processedFiles.has(filePath)) {
+    return '';
+  }
+  processedFiles.add(filePath);
+
   // Remove type imports first
-  content = content.replace(/import\s+type\s+.*?from\s+['"][^'"]+['"]/g, '');
+  content = content.replace(/import\s+type\s+.*?from\s+['"][^'"]+['"];?/g, '');
 
   // Track imported variables and their values
-  const importedVars = new Map<string, string>();
-  let importedContent = '';
+  const importedVars = new Map<string, { keyword: string; value: string }>();
+  let importedContents: string[] = []; // Changed to array to store all imported contents
 
   // Process named imports with potential aliases
-  content = content.replace(/import\s*{([^}]+)}\s+from\s+['"]([^'"]+)['"]/g, (match, imports, importPath) => {
-    // Only get the imported content once per file
-    if (!importedContent) {
-      importedContent = handleImport(importPath, filePath);
-    }
-    if (!importedContent) return '';
+  content = content.replace(/import\s*{([^}]+)}\s+from\s+['"]([^'"]+)['"];?/g, (match, imports, importPath) => {
+    // Get imported content for this specific import
+    const currentContent = handleImport(importPath, filePath);
+    if (!currentContent) return '';
 
-    // Extract the actual value from the imported content
-    const exec = /const\s+(\w+)\s*=\s*(.+?);/.exec(importedContent);
-    const importedValue = exec ? exec[2] : '';
+    // Store the content for later use
+    importedContents.push(currentContent);
 
     // Process each imported item
     imports.split(',').forEach((imp) => {
-      const [, alias] = imp.trim().split(/\s+as\s+/);
+      const [original, alias] = imp.trim().split(/\s+as\s+/);
       if (alias) {
-        // Store the alias with the actual value
-        importedVars.set(alias.trim(), importedValue);
+        // Extract declaration for the original variable
+        const exec = new RegExp(`(const|let|var|function)\\s+${original.trim()}\\s*=\\s*(.+?);`).exec(currentContent);
+        if (exec) {
+          const [, keyword, value] = exec;
+          importedVars.set(alias.trim(), { keyword, value });
+        }
       }
     });
-
     return ''; // Remove the import statement
   });
 
   // Process default imports
-  content = content.replace(/import\s+(\w+)\s+from\s+['"]([^'"]+)['"]/g, (match, importName, importPath) => {
+  content = content.replace(/import\s+(\w+)\s+from\s+['"]([^'"]+)['"];?/g, (match, importName, importPath) => {
     const newContent = handleImport(importPath, filePath);
-    return newContent || '';
+    if (newContent) {
+      importedContents.push(newContent);
+    }
+    return '';
   });
 
-  // Combine the imported content with aliases and the original content
-  if (importedContent) {
-    // Add alias declarations after the imported content
+  // Combine all imported contents with aliases and the original content
+  if (importedContents.length > 0) {
     const aliasDefs = Array.from(importedVars.entries())
-      .map(([alias, value]) => {
-        const regex = new RegExp(`(const|let|var)\\s+${alias}\\s*=`);
-        const exec = regex.exec(importedContent);
-        const keyword = exec ? exec[1] : 'const';
+      .map(([alias, { keyword, value }]) => {
+        if (keyword === 'function') {
+          return `${keyword} ${alias}${value.substring(value.indexOf('('))}`;
+        }
         return `${keyword} ${alias} = ${value};`;
       })
       .join('\n');
 
-    return `${importedContent}\n${aliasDefs}\n${content}`;
+    return `${importedContents.join('\n')}\n${aliasDefs}\n${content}`;
   }
 
   return content;
 }
 
 function handleImport(importPath: string, filePath: string): string {
-  if (importPath.includes('sw-builder')) return '';
+  // Don't process imports from sw-builder package
+  if (importPath.includes('@simple_js/sw-builder')) return '';
+
   const importedContent = resolveImport(importPath, filePath);
-  return importedContent ? inlineImports(importedContent, filePath) : '';
+  if (!importedContent) return '';
+
+  const absolutePath = path.resolve(path.dirname(filePath), importPath);
+  return inlineImports(importedContent, absolutePath);
 }
 
 /**
@@ -152,6 +175,9 @@ function removeExports(content: string): string {
  * @returns {string} The complete service worker content
  */
 export function mergeContents({ sourceContent, exportedItems, sourcePath, config }: MergeOptions): string {
+  // Reset the processed files tracking
+  resetProcessedFiles();
+
   // Get all registered hooks that were exported from source
   const registeredHooks = Object.entries(hooksMap)
     .filter(([, value]) => exportedItems.has(value))
@@ -160,6 +186,7 @@ export function mergeContents({ sourceContent, exportedItems, sourcePath, config
 
   // Process and inline all imports
   const inlinedContent = inlineImports(sourceContent, sourcePath);
+
   // Remove export keywords
   const processedContent = removeExports(inlinedContent);
   const entryContent = createEntryContent(config);

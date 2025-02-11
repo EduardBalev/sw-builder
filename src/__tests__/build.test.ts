@@ -44,6 +44,7 @@ describe('buildServiceWorker', () => {
       };
 
       export const onFetch = (event) => {
+        someUtil();
         console.log('Fetching', CONFIG.debug);
       };
 
@@ -56,7 +57,7 @@ describe('buildServiceWorker', () => {
     fs.writeFileSync(
       utilsPath,
       `
-      export const someUtil = () => {
+      export function someUtil() {
         if (CONFIG.debug) {
           console.log('util');
         }
