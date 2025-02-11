@@ -46,27 +46,87 @@ function resolveImport(importPath: string, fromPath: string): string {
  * @returns {string} Content with all imports inlined and type imports removed
  */
 function inlineImports(content: string, filePath: string): string {
-  // Split into two simpler regexes
-  const namedImportRegex = /import\s+{[^}]*}\s+from\s+['"]([^'"]+)['"]/g;
-  const defaultImportRegex = /import\s+\w+\s+from\s+['"]([^'"]+)['"]/g;
-  const typeImportRegex = /import\s+type\s+.*?from\s+['"][^'"]+['"]/g;
-
   // Remove type imports first
-  content = content.replace(typeImportRegex, '');
+  content = content.replace(/import\s+type\s+.*?from\s+['"][^'"]+['"]/g, '');
 
-  // Handle both import types
-  content = content.replace(namedImportRegex, (match, importPath) => {
-    return handleImport(importPath, filePath);
+  // Track imported variables and their values
+  const importedVars = new Map<string, string>();
+  let importedContent = '';
+
+  // Process named imports with potential aliases
+  content = content.replace(/import\s*{([^}]+)}\s+from\s+['"]([^'"]+)['"]/g, (match, imports, importPath) => {
+    // Only get the imported content once per file
+    if (!importedContent) {
+      importedContent = handleImport(importPath, filePath);
+    }
+    if (!importedContent) return '';
+
+    // Extract the actual value from the imported content
+    const exec = /const\s+(\w+)\s*=\s*(.+?);/.exec(importedContent);
+    const importedValue = exec ? exec[2] : '';
+
+    // Process each imported item
+    imports.split(',').forEach((imp) => {
+      const [, alias] = imp.trim().split(/\s+as\s+/);
+      if (alias) {
+        // Store the alias with the actual value
+        importedVars.set(alias.trim(), importedValue);
+      }
+    });
+
+    return ''; // Remove the import statement
   });
-  return content.replace(defaultImportRegex, (match, importPath) => {
-    return handleImport(importPath, filePath);
+
+  // Process default imports
+  content = content.replace(/import\s+(\w+)\s+from\s+['"]([^'"]+)['"]/g, (match, importName, importPath) => {
+    const newContent = handleImport(importPath, filePath);
+    return newContent || '';
   });
+
+  // Combine the imported content with aliases and the original content
+  if (importedContent) {
+    // Add alias declarations after the imported content
+    const aliasDefs = Array.from(importedVars.entries())
+      .map(([alias, value]) => {
+        const regex = new RegExp(`(const|let|var)\\s+${alias}\\s*=`);
+        const exec = regex.exec(importedContent);
+        const keyword = exec ? exec[1] : 'const';
+        return `${keyword} ${alias} = ${value};`;
+      })
+      .join('\n');
+
+    return `${importedContent}\n${aliasDefs}\n${content}`;
+  }
+
+  return content;
 }
 
 function handleImport(importPath: string, filePath: string): string {
   if (importPath.includes('sw-builder')) return '';
   const importedContent = resolveImport(importPath, filePath);
   return importedContent ? inlineImports(importedContent, filePath) : '';
+}
+
+/**
+ * Removes export keywords from content while preserving declarations
+ *
+ * @param {string} content - The content to process
+ * @returns {string} Content with export keywords removed
+ */
+function removeExports(content: string): string {
+  return (
+    content
+      // Remove 'export default' from class/function declarations
+      .replace(/export\s+default\s+(class|function)\s+/g, '$1 ')
+      // Remove 'export default' from other expressions
+      .replace(/export\s+default\s+/g, '')
+      // Remove 'export' from const/let/var/function/class declarations
+      .replace(/export\s+(const|let|var|function|class)\s+/g, '$1 ')
+      // Remove 'export' from named exports
+      .replace(/export\s*{[^}]*}/g, '')
+      // Remove any remaining standalone 'export' keywords
+      .replace(/^\s*export\s+/gm, '')
+  );
 }
 
 /**
@@ -100,6 +160,8 @@ export function mergeContents({ sourceContent, exportedItems, sourcePath, config
 
   // Process and inline all imports
   const inlinedContent = inlineImports(sourceContent, sourcePath);
+  // Remove export keywords
+  const processedContent = removeExports(inlinedContent);
   const entryContent = createEntryContent(config);
 
   // Always include entry content, even for empty files
@@ -108,7 +170,7 @@ export function mergeContents({ sourceContent, exportedItems, sourcePath, config
     ${entryContent}
 
     // Inlined dependencies and source content
-    ${inlinedContent}
+    ${processedContent}
 
     // Register hooks
     ${registeredHooks}
