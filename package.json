@@ -1,6 +1,6 @@
 {
   "name": "@simple_js/sw-builder",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "A powerful TypeScript library that simplifies service worker development",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -30,7 +30,13 @@
     "demo": "npm-run-all --parallel serve dev",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "version:major": "node scripts/bump-version.js major",
+    "version:minor": "node scripts/bump-version.js minor",
+    "version:patch": "node scripts/bump-version.js patch",
+    "publish:major": "npm run version:major && npm publish",
+    "publish:minor": "npm run version:minor && npm publish",
+    "publish:patch": "npm run version:patch && npm publish"
   },
   "keywords": [
     "service-worker",
