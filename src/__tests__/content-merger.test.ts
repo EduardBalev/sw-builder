@@ -86,6 +86,7 @@ describe('content-merger', () => {
         import { API_URL as BaseUrl } from "./constants";
 
         self.addEventListener('fetch', () => {
+          console.log(API_URL, BaseUrl);
           fetch(API_URL + '/data');
         });
       `,
@@ -96,8 +97,10 @@ describe('content-merger', () => {
 
     // Should only declare the constant once
     const matches = result.match(/const API_URL/g) || [];
+
     expect(matches.length).toBe(1);
     expect(result).toContain('const API_URL = "https://api.example.com"');
+    expect(result).toContain('const BaseUrl = "https://api.example.com"');
     expect(result).toContain("fetch(API_URL + '/data')");
   });
 
