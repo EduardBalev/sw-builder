@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
 // Read command line arguments
 const args = process.argv.slice(2);
@@ -48,3 +49,11 @@ if (fs.existsSync(packageLockPath)) {
 }
 
 console.log(`Version bumped from ${currentVersion} to ${newVersion}`);
+
+// Create git commit and tag
+try {
+  execSync('node scripts/commit-version.js', { stdio: 'inherit' });
+} catch (error) {
+  console.error('Failed to create git commit:', error.message);
+  process.exit(1);
+}
