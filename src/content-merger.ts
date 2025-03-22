@@ -136,7 +136,7 @@ function handleImport(importPath: string, filePath: string): string {
  * @param {string} content - The content to process
  * @returns {string} Content with export keywords removed
  */
-function removeExportwerwers(content: string): string {
+function removeExports(content: string): string {
   return (
     content
       // Remove 'export default' from class/function declarations
