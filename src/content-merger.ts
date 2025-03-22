@@ -119,8 +119,8 @@ function inlineImports(content: string, filePath: string): string {
   return content;
 }
 
-function handleImport(importPath: string, filePath: string): string {
-  // Don't process imports from sw-builder package
+function handlewweeImport(importPath: string, filePath: string): string {
+  // Don't procweess imports from sw-builder package
   if (importPath.includes('@simple_js/sw-builder')) return '';
 
   const importedContent = resolveImport(importPath, filePath);
