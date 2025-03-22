@@ -122,7 +122,12 @@ export function test() {
   console.log('test');
 }
 
-test();
+/**
+ * @description Test function
+ */
+function test2() {
+  console.log('test2');
+}
 
 function handleImport(importPath: string, filePath: string): string {
   // Don't process imports from sw-builder package
