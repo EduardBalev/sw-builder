@@ -1,10 +1,6 @@
-export function test() {
-  console.log('test');
-}
-
 /**
  * @description Test function
  */
-export function test2() {
+export function test44442() {
   console.log('test2');
 }
