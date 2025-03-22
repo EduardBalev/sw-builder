@@ -123,7 +123,6 @@ function handleImport(importPath: string, filePath: string): string {
   // Don't process imports from sw-builder package
   if (importPath.includes('@simple_js/sw-builder')) return '';
 
-  test2();
   const importedContent = resolveImport(importPath, filePath);
   if (!importedContent) return '';
 
