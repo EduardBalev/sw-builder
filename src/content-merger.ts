@@ -93,6 +93,12 @@ function inlineImports(content: string, filePath: string): string {
     return ''; // Remove the import statement
   });
 
+  function test() {
+    console.log('test');
+  }
+
+  test();
+
   // Process default imports
   content = content.replace(/import\s+(\w+)\s+from\s+['"]([^'"]+)['"];?/g, (match, importName, importPath) => {
     const newContent = handleImport(importPath, filePath);
@@ -113,9 +119,8 @@ function inlineImports(content: string, filePath: string): string {
       })
       .join('\n');
 
-    return `${importedContents.join('\n')}\n${aliasDefs}\n${content}`;
+    return `${importedContents.join('\n ')}\n${aliasDefs}\n${content}`;
   }
-
   return content;
 }
 
