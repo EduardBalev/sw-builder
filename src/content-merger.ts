@@ -4,6 +4,7 @@ import { createEntryContent } from './entry';
 import { callRegisterEvent } from './entry/register-event';
 import { hooksMap } from './interfaces';
 import { SwConfig } from './interfaces/config';
+import { test2 } from './test';
 
 // Track processed files to prevent circular imports
 const processedFiles = new Set<string>();
@@ -118,21 +119,11 @@ function inlineImports(content: string, filePath: string): string {
   return content;
 }
 
-export function test() {
-  console.log('test');
-}
-
-/**
- * @description Test function
- */
-function test2() {
-  console.log('test2');
-}
-
 function handleImport(importPath: string, filePath: string): string {
   // Don't process imports from sw-builder package
   if (importPath.includes('@simple_js/sw-builder')) return '';
 
+  test2();
   const importedContent = resolveImport(importPath, filePath);
   if (!importedContent) return '';
 
