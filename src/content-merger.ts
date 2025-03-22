@@ -93,12 +93,6 @@ function inlineImports(content: string, filePath: string): string {
     return ''; // Remove the import statement
   });
 
-  function test() {
-    console.log('test');
-  }
-
-  test();
-
   // Process default imports
   content = content.replace(/import\s+(\w+)\s+from\s+['"]([^'"]+)['"];?/g, (match, importName, importPath) => {
     const newContent = handleImport(importPath, filePath);
@@ -123,6 +117,12 @@ function inlineImports(content: string, filePath: string): string {
   }
   return content;
 }
+
+export function test() {
+  console.log('test');
+}
+
+test();
 
 function handleImport(importPath: string, filePath: string): string {
   // Don't process imports from sw-builder package
